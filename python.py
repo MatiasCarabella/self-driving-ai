@@ -27,25 +27,33 @@ circuit_image = pygame.transform.scale(circuit_image, (WIDTH, HEIGHT))
 
 # Función para buscar el punto de inicio en la imagen basada en el color
 def find_start_position(image, start_color):
-    """Busca el primer píxel con el color de inicio y devuelve su posición"""
+    """Busca el primer píxel con el color de inicio y determina la dirección inicial"""
     for y in range(image.get_height()):
         for x in range(image.get_width()):
             if image.get_at((x, y)) == start_color:
-                return x, y
+                # Buscar la dirección de la pista
+                directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # izquierda, derecha, arriba, abajo
+                for dx, dy in directions:
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < image.get_width() and 0 <= ny < image.get_height():
+                        if image.get_at((nx, ny)) == BLACK:
+                            # Calcular el ángulo inicial
+                            angle = math.degrees(math.atan2(-dy, dx))
+                            return x, y, angle
     return None
 
 # Configuración del vehículo
 class Vehicle:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, initial_angle):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.angle = 0  # Ángulo del vehículo
+        self.angle = initial_angle  # Usar el ángulo inicial proporcionado
         self.speed = 0  # Velocidad
-        self.max_speed = 5
+        self.max_speed = 6
         self.acceleration = 0.2
-        self.rotation_speed = 5  # Velocidad de rotación
+        self.rotation_speed = 4  # Velocidad de rotación
         self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self.image.fill(RED)
         self.sensors = []  # Lista de sensores (rayos) con distancia
@@ -71,7 +79,7 @@ class Vehicle:
             if self.speed > -self.max_speed:
                 self.speed -= self.acceleration
         else:
-            self.speed *= 0.9  # Desaceleración natural
+            self.speed *= 0.98  # Desaceleración natural
 
         if keys[pygame.K_LEFT]:
             self.angle += self.rotation_speed * (self.speed / self.max_speed)  # Girar más rápido a más velocidad
@@ -123,12 +131,13 @@ def main():
     clock = pygame.time.Clock()
     run = True
 
-    # Buscar la posición inicial basada en el color del circuito
-    start_position = find_start_position(circuit_image, START_COLOR)
-    if start_position:
-        vehicle = Vehicle(start_position[0], start_position[1], 40, 20)
+    # Buscar la posición y dirección inicial basada en el color del circuito
+    start_info = find_start_position(circuit_image, START_COLOR)
+    if start_info:
+        x, y, angle = start_info
+        vehicle = Vehicle(x, y, 40, 20, angle)
     else:
-        vehicle = Vehicle(WIDTH // 2, HEIGHT // 2, 40, 20)  # Posición por defecto si no se encuentra
+        vehicle = Vehicle(WIDTH // 2, HEIGHT // 2, 40, 20, 0)  # Posición y ángulo por defecto si no se encuentra
 
     while run:
         clock.tick(60)
