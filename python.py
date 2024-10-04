@@ -49,10 +49,13 @@ class Vehicle:
         self.y = y
         self.width = width
         self.height = height
-        self.angle = initial_angle  # Usar el ángulo inicial proporcionado
-        self.speed = 0  # Velocidad
-        self.max_speed = 6
+        self.angle = initial_angle
+        self.speed = 0  # Velocidad inicial
+        self.max_speed = 6  # Velocidad máxima en carretera
+        self.max_speed_partially_off = 3  # Velocidad máxima cuando está parcialmente fuera
+        self.max_speed_completely_off = 1  # Velocidad máxima cuando está completamente fuera
         self.acceleration = 0.2
+        self.desacceleration = 0.95
         self.rotation_speed = 4  # Velocidad de rotación
         self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self.image.fill(RED)
@@ -79,7 +82,7 @@ class Vehicle:
             if self.speed > -self.max_speed:
                 self.speed -= self.acceleration
         else:
-            self.speed *= 0.98  # Desaceleración natural
+            self.speed *= self.desacceleration  # Desaceleración natural
 
         if keys[pygame.K_LEFT]:
             self.angle += self.rotation_speed * (self.speed / self.max_speed)  # Girar más rápido a más velocidad
@@ -91,19 +94,79 @@ class Vehicle:
         new_x = self.x + self.speed * math.cos(rad_angle)
         new_y = self.y - self.speed * math.sin(rad_angle)
 
-        # Comprobar colisiones con el circuito (imagen)
-        if self.is_on_road(new_x, new_y):
+        # Comprobar si está completamente fuera o parcialmente fuera
+        road_status = self.check_road_status(new_x, new_y)
+
+        if road_status == "on_road":
+            self.x = new_x
+            self.y = new_y
+            self.max_speed = 6  # Restablecer velocidad máxima al volver a la carretera
+            self.speed = min(self.speed, self.max_speed)  # Asegurarse de que la velocidad no exceda el máximo
+        elif road_status == "partially_off":
+            self.max_speed = self.max_speed_partially_off  # Reducir velocidad máxima si está parcialmente fuera
+            if self.speed > self.max_speed_partially_off:
+                self.speed *= self.desacceleration  # Desaceleración natural  # Mantener velocidad dentro de los límites
+            # Permitir el movimiento, pero con penalización de velocidad
+            self.x = new_x
+            self.y = new_y
+        elif road_status == "completely_off":
+            self.max_speed = self.max_speed_completely_off  # Reducir velocidad máxima si está completamente fuera
+            if self.speed > self.max_speed_completely_off:
+                self.speed *= self.desacceleration  # Desaceleración natural  # Mantener velocidad dentro de los límites
+            # Permitir el movimiento, pero con penalización de velocidad
             self.x = new_x
             self.y = new_y
 
         # Actualizar sensores
         self.update_sensors()
 
+    def check_road_status(self, x, y):
+        """Determina si el vehículo está en la carretera, parcialmente fuera o completamente fuera"""
+        rect = pygame.Rect(x - self.width / 2, y - self.height / 2, self.width, self.height)
+        rotated_rect = self.get_rotated_vertices(rect)
+
+        # Contador para las esquinas sobre la carretera
+        on_road_count = 0
+        total_corners = len(rotated_rect)
+
+        for vertex in rotated_rect:
+            if self.is_on_road(vertex[0], vertex[1]):
+                on_road_count += 1
+
+        # Determinar el estado del vehículo según las esquinas sobre la carretera
+        if on_road_count == total_corners:
+            return "on_road"  # Completamente en la carretera
+        elif on_road_count > 0:
+            return "partially_off"  # Parcialmente fuera
+        else:
+            return "completely_off"  # Completamente fuera
+
+    def get_rotated_vertices(self, rect):
+        """Obtiene los vértices del rectángulo del vehículo rotado"""
+        rad_angle = math.radians(self.angle)
+        cx, cy = rect.center
+
+        corners = [
+            (rect.topleft),
+            (rect.topright),
+            (rect.bottomright),
+            (rect.bottomleft)
+        ]
+
+        rotated_corners = []
+        for corner in corners:
+            dx, dy = corner[0] - cx, corner[1] - cy
+            rotated_x = cx + dx * math.cos(rad_angle) - dy * math.sin(rad_angle)
+            rotated_y = cy + dx * math.sin(rad_angle) + dy * math.cos(rad_angle)
+            rotated_corners.append((rotated_x, rotated_y))
+
+        return rotated_corners
+
     def is_on_road(self, x, y):
-        """Comprueba si el vehículo está sobre la carretera (color negro)"""
+        """Comprueba si una posición dada está sobre la carretera"""
         if 0 <= x < WIDTH and 0 <= y < HEIGHT:
             color_at_position = circuit_image.get_at((int(x), int(y)))
-            return color_at_position == BLACK or color_at_position == YELLOW  # Solo es carretera si el color es negro o amarillo (inicio)
+            return color_at_position == BLACK or color_at_position == YELLOW
         return False
 
     def update_sensors(self):
