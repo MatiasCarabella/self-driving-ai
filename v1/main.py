@@ -198,7 +198,7 @@ class Vehicle:
             self.sensors.append((sensor_end, distance))
 
 # Duración de la inactividad del checkpoint en segundos
-CHECKPOINT_COOLDOWN = 6
+CHECKPOINT_COOLDOWN = 5
 
 class Checkpoint:
     def __init__(self, position):
@@ -211,7 +211,7 @@ class Checkpoint:
 # Función para verificar si el vehículo ha cruzado un checkpoint gris
 def check_checkpoint(vehicle, current_time, checkpoints):
     """Verifica si el vehículo ha cruzado un checkpoint activo."""
-    radius = 1  # Radio de detección
+    radius = 2  # Radio de detección
     for dx in range(-radius, radius + 1):
         for dy in range(-radius, radius + 1):
             if dx * dx + dy * dy <= radius * radius:  # Área circular
