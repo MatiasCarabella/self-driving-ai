@@ -197,11 +197,22 @@ class Vehicle:
             # Guardar la posición final del sensor y la distancia
             self.sensors.append((sensor_end, distance))
 
+# Duración de la inactividad del checkpoint en segundos
+CHECKPOINT_COOLDOWN = 6
+
+class Checkpoint:
+    def __init__(self, position):
+        self.position = position
+        self.last_crossed = 0  # Tiempo en que se cruzó por última vez
+
+    def is_active(self, current_time):
+        return current_time - self.last_crossed >= CHECKPOINT_COOLDOWN
+
 # Función para verificar si el vehículo ha cruzado un checkpoint gris
-def check_checkpoint(vehicle):
-    """Verifica si el vehículo ha cruzado un checkpoint gris."""
+def check_checkpoint(vehicle, current_time, checkpoints):
+    """Verifica si el vehículo ha cruzado un checkpoint activo."""
     radius = 1  # Radio de detección
-    for dx in range(-radius, radius + 1):  # Búsqueda en un área alrededor del vehículo
+    for dx in range(-radius, radius + 1):
         for dy in range(-radius, radius + 1):
             if dx * dx + dy * dy <= radius * radius:  # Área circular
                 check_x = int(vehicle.x + dx)
@@ -209,8 +220,17 @@ def check_checkpoint(vehicle):
                 if 0 <= check_x < WIDTH and 0 <= check_y < HEIGHT:
                     color_at_position = circuit_image.get_at((check_x, check_y))
                     if color_at_position == GRAY:  # Comprobar si es gris
-                        return (check_x, check_y)  # Devolver la posición del checkpoint
-    return None
+                        position = (check_x, check_y)
+                        if position in checkpoints:
+                            checkpoint = checkpoints[position]
+                            if checkpoint.is_active(current_time):
+                                checkpoint.last_crossed = current_time
+                                return True
+                        else:
+                            checkpoints[position] = Checkpoint(position)
+                            checkpoints[position].last_crossed = current_time
+                            return True
+    return False
 
 def check_off_track(vehicle):
     """Verifica si el vehículo está fuera del circuito y aplica penalizaciones"""
@@ -234,7 +254,7 @@ vehicle = Vehicle(start_position[0], start_position[1], 20, 10, start_position[2
 def main():
     clock = pygame.time.Clock()
     run = True
-    crossed_checkpoints = set()  # Usar un conjunto para almacenar checkpoints cruzados
+    checkpoints = {}  # Diccionario para almacenar checkpoints y sus tiempos
     start_ticks = pygame.time.get_ticks()  # Iniciar el temporizador
     vehicle.last_penalty_time = time.time()  # Inicializar el tiempo de la última penalización
     vehicle.score = 0  # Inicializar la puntuación del vehículo
@@ -243,12 +263,13 @@ def main():
         clock.tick(60)
         window.fill((255, 255, 255))  # Limpiar la pantalla con blanco
         
+        current_time = time.time()
         # Obtener el tiempo transcurrido y restante
         elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000  # Tiempo transcurrido en segundos
         remaining_time = max(0, EPISODE_DURATION - elapsed_time)  # Tiempo restante en segundos
 
         if remaining_time == 0:  # Si se ha acabado el tiempo
-            print(f"Fin del episodio. Recompensas totales: {len(crossed_checkpoints)}, Puntuación final: {vehicle.score}")
+            print(f"Fin del episodio. Puntuación final: {vehicle.score}")
             run = False  # Terminar el episodio
 
         for event in pygame.event.get():
@@ -263,11 +284,9 @@ def main():
         vehicle.draw(window)
 
         # Verificar si el vehículo cruzó un checkpoint
-        checkpoint = check_checkpoint(vehicle)
-        if checkpoint and checkpoint not in crossed_checkpoints:
-            crossed_checkpoints.add(checkpoint)  # Agregar a los checkpoints cruzados
+        if check_checkpoint(vehicle, current_time, checkpoints):
             vehicle.score += 5  # Añadir 5 puntos por cada checkpoint
-            print(f"Checkpoint cruzado! Recompensa total: {len(crossed_checkpoints)}, Puntuación: {vehicle.score}")
+            print(f"Checkpoint cruzado! Puntuación: {vehicle.score}")
 
         # Verificar si el vehículo está fuera del circuito
         check_off_track(vehicle)
