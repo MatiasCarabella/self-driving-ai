@@ -1,6 +1,7 @@
 import os
 import pygame
 import math
+import time
 
 # Inicializamos PyGame
 pygame.init()
@@ -15,6 +16,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
+GRAY = (128, 128, 128)  # Color que representa el checkpoint
 START_COLOR = YELLOW  # Color que representa el punto de inicio
 
 # Obtener la ruta absoluta del directorio donde se está ejecutando el archivo .py
@@ -79,8 +81,7 @@ class Vehicle:
             if self.speed < self.max_speed:
                 self.speed += self.acceleration
         elif keys[pygame.K_DOWN]:
-            if self.speed > -self.max_speed:
-                self.speed -= self.acceleration
+            pass  # El agente no puede frenar
         else:
             self.speed *= self.desacceleration  # Desaceleración natural
 
@@ -170,7 +171,7 @@ class Vehicle:
         return False
 
     def update_sensors(self):
-        """ Actualiza los sensores y devuelve la distancia al obstáculo o carretera """
+        """Actualiza los sensores y devuelve la distancia al obstáculo o carretera"""
         self.sensors = []
         sensor_angles = [-90, -45, 0, 45, 90]  # Ángulos relativos al frente del vehículo
         sensor_length = 150  # Longitud máxima de los sensores
@@ -189,22 +190,57 @@ class Vehicle:
             # Guardar la posición final del sensor y la distancia
             self.sensors.append((sensor_end, distance))
 
+# Función para verificar si el vehículo ha cruzado un checkpoint gris
+def check_checkpoint(vehicle):
+    """Verifica si el vehículo ha cruzado un checkpoint gris."""
+    radius = 1  # Radio de detección
+    for dx in range(-radius, radius + 1):  # Búsqueda en un área alrededor del vehículo
+        for dy in range(-radius, radius + 1):
+            if dx * dx + dy * dy <= radius * radius:  # Área circular
+                check_x = int(vehicle.x + dx)
+                check_y = int(vehicle.y + dy)
+                if 0 <= check_x < WIDTH and 0 <= check_y < HEIGHT:
+                    color_at_position = circuit_image.get_at((check_x, check_y))
+                    if color_at_position == GRAY:  # Comprobar si es gris
+                        return (check_x, check_y)  # Devolver la posición del checkpoint
+    return None
+
+def check_off_track(vehicle):
+    """Verifica si el vehículo está fuera del circuito y aplica penalizaciones"""
+    current_time = time.time()
+    if current_time - vehicle.last_penalty_time >= 0.25:  # Delay de 0.1 segundos
+        road_status = vehicle.check_road_status(vehicle.x, vehicle.y)
+        
+        if road_status != "on_road":
+            penalty = -1 if road_status == "partially_off" else -2  # -1 para salida parcial, -2 para total
+            vehicle.score += penalty
+            vehicle.last_penalty_time = current_time
+            print(f"Penalización: {penalty}. Puntuación total: {vehicle.score}")
+
+# Inicializar el vehículo
+start_position = find_start_position(circuit_image, START_COLOR)
+if start_position is None:
+    raise ValueError("No se encontró un punto de inicio en el circuito.")
+vehicle = Vehicle(start_position[0], start_position[1], 20, 10, start_position[2])
+
 # Bucle principal
 def main():
     clock = pygame.time.Clock()
     run = True
-
-    # Buscar la posición y dirección inicial basada en el color del circuito
-    start_info = find_start_position(circuit_image, START_COLOR)
-    if start_info:
-        x, y, angle = start_info
-        vehicle = Vehicle(x, y, 40, 20, angle)
-    else:
-        vehicle = Vehicle(WIDTH // 2, HEIGHT // 2, 40, 20, 0)  # Posición y ángulo por defecto si no se encuentra
+    crossed_checkpoints = set()  # Usar un conjunto para almacenar checkpoints cruzados
+    start_ticks = pygame.time.get_ticks()  # Iniciar el temporizador
+    vehicle.last_penalty_time = time.time()  # Inicializar el tiempo de la última penalización
+    vehicle.score = 0  # Inicializar la puntuación del vehículo
 
     while run:
         clock.tick(60)
         window.fill((255, 255, 255))  # Limpiar la pantalla con blanco
+        
+        # Obtener el tiempo transcurrido
+        seconds = (pygame.time.get_ticks() - start_ticks) / 1000  # Tiempo en segundos
+        if seconds > 15:  # Si han pasado 15 segundos
+            print(f"Fin del episodio. Recompensas totales: {len(crossed_checkpoints)}, Puntuación final: {vehicle.score}")
+            run = False  # Terminar el episodio
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -216,6 +252,16 @@ def main():
         # Actualizar y dibujar el vehículo
         vehicle.update()
         vehicle.draw(window)
+
+        # Verificar si el vehículo cruzó un checkpoint
+        checkpoint = check_checkpoint(vehicle)
+        if checkpoint and checkpoint not in crossed_checkpoints:
+            crossed_checkpoints.add(checkpoint)  # Agregar a los checkpoints cruzados
+            vehicle.score += 5  # Añadir 10 puntos por cada checkpoint
+            print(f"Checkpoint cruzado! Recompensa total: {len(crossed_checkpoints)}, Puntuación: {vehicle.score}")
+
+        # Verificar si el vehículo está fuera del circuito
+        check_off_track(vehicle)
 
         # Actualizar la pantalla
         pygame.display.update()
