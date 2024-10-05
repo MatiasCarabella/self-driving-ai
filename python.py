@@ -17,7 +17,14 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 GRAY = (128, 128, 128)  # Color que representa el checkpoint
+WHITE = (255, 255, 255)
 START_COLOR = YELLOW  # Color que representa el punto de inicio
+
+# Fuente para el texto de puntuación y temporizador
+FONT = pygame.font.Font(None, 36)
+
+# Duración del episodio en segundos
+EPISODE_DURATION = 15
 
 # Obtener la ruta absoluta del directorio donde se está ejecutando el archivo .py
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -236,9 +243,11 @@ def main():
         clock.tick(60)
         window.fill((255, 255, 255))  # Limpiar la pantalla con blanco
         
-        # Obtener el tiempo transcurrido
-        seconds = (pygame.time.get_ticks() - start_ticks) / 1000  # Tiempo en segundos
-        if seconds > 15:  # Si han pasado 15 segundos
+        # Obtener el tiempo transcurrido y restante
+        elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000  # Tiempo transcurrido en segundos
+        remaining_time = max(0, EPISODE_DURATION - elapsed_time)  # Tiempo restante en segundos
+
+        if remaining_time == 0:  # Si se ha acabado el tiempo
             print(f"Fin del episodio. Recompensas totales: {len(crossed_checkpoints)}, Puntuación final: {vehicle.score}")
             run = False  # Terminar el episodio
 
@@ -257,11 +266,27 @@ def main():
         checkpoint = check_checkpoint(vehicle)
         if checkpoint and checkpoint not in crossed_checkpoints:
             crossed_checkpoints.add(checkpoint)  # Agregar a los checkpoints cruzados
-            vehicle.score += 5  # Añadir 10 puntos por cada checkpoint
+            vehicle.score += 5  # Añadir 5 puntos por cada checkpoint
             print(f"Checkpoint cruzado! Recompensa total: {len(crossed_checkpoints)}, Puntuación: {vehicle.score}")
 
         # Verificar si el vehículo está fuera del circuito
         check_off_track(vehicle)
+
+        # Dibujar la puntuación en la pantalla (esquina superior izquierda)
+        score_text = FONT.render(f"Puntos: {vehicle.score}", True, WHITE)
+        score_rect = score_text.get_rect()
+        score_rect.topleft = (10, 10)
+        pygame.draw.rect(window, BLACK, (score_rect.left - 5, score_rect.top - 5, 
+                                         score_rect.width + 10, score_rect.height + 10))
+        window.blit(score_text, score_rect)
+
+        # Dibujar el temporizador en la pantalla (esquina superior derecha)
+        timer_text = FONT.render(f"Tiempo: {remaining_time:.1f}", True, WHITE)
+        timer_rect = timer_text.get_rect()
+        timer_rect.topright = (WIDTH - 10, 10)
+        pygame.draw.rect(window, BLACK, (timer_rect.left - 5, timer_rect.top - 5, 
+                                         timer_rect.width + 10, timer_rect.height + 10))
+        window.blit(timer_text, timer_rect)
 
         # Actualizar la pantalla
         pygame.display.update()
