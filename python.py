@@ -174,7 +174,7 @@ class Vehicle:
         """Comprueba si una posición dada está sobre la carretera"""
         if 0 <= x < WIDTH and 0 <= y < HEIGHT:
             color_at_position = circuit_image.get_at((int(x), int(y)))
-            return color_at_position == BLACK or color_at_position == YELLOW
+            return color_at_position in [BLACK, GRAY, YELLOW]
         return False
 
     def update_sensors(self):
@@ -221,14 +221,20 @@ def check_checkpoint(vehicle, current_time, checkpoints):
                     color_at_position = circuit_image.get_at((check_x, check_y))
                     if color_at_position == GRAY:  # Comprobar si es gris
                         position = (check_x, check_y)
+                        # Verificar que el checkpoint actual no sea el mismo que el último cruzado
+                        if position in checkpoints and position == vehicle.last_checkpoint:
+                            return False  # No recompensar si es el mismo checkpoint
+                        
                         if position in checkpoints:
                             checkpoint = checkpoints[position]
                             if checkpoint.is_active(current_time):
                                 checkpoint.last_crossed = current_time
+                                vehicle.last_checkpoint = position  # Actualizar el último checkpoint cruzado
                                 return True
                         else:
                             checkpoints[position] = Checkpoint(position)
                             checkpoints[position].last_crossed = current_time
+                            vehicle.last_checkpoint = position  # Guardar nuevo checkpoint cruzado
                             return True
     return False
 
@@ -258,6 +264,7 @@ def main():
     start_ticks = pygame.time.get_ticks()  # Iniciar el temporizador
     vehicle.last_penalty_time = time.time()  # Inicializar el tiempo de la última penalización
     vehicle.score = 0  # Inicializar la puntuación del vehículo
+    vehicle.last_checkpoint = None  # Inicializar el último checkpoint cruzado
 
     while run:
         clock.tick(60)
