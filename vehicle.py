@@ -182,15 +182,34 @@ class Vehicle:
             sensor_angle = math.radians(self.angle + angle_offset)
             end_x = self.x + sensor_length * math.cos(sensor_angle)
             end_y = self.y - sensor_length * math.sin(sensor_angle)
-            sensor_end = (end_x, end_y)
 
-            # Calcular la distancia hasta colisión
-            distance = sensor_length
-            if not self.is_on_road(end_x, end_y):
-                distance = math.sqrt((self.x - end_x) ** 2 + (self.y - end_y) ** 2)
+            # Calcular la distancia hasta el primer obstáculo
+            distance = sensor_length  # Inicializar a la longitud máxima
+            first_obstacle_found = False  # Para verificar si se encontró un obstáculo
+
+            for d in range(int(sensor_length)):
+                check_x = int(self.x + d * math.cos(sensor_angle))
+                check_y = int(self.y - d * math.sin(sensor_angle))
+
+                # Verificar si estamos dentro de los límites
+                if 0 <= check_x < environment.SCREEN_WIDTH and 0 <= check_y < environment.SCREEN_HEIGHT:
+                    color_at_position = environment.CIRCUIT_IMAGE.get_at((check_x, check_y))
+                    
+                    # Verificar si el color no es de carretera, checkpoint o inicio
+                    if color_at_position not in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
+                        distance = d  # Establecer la distancia al primer obstáculo encontrado
+                        first_obstacle_found = True
+                        break  # Salir del bucle si encontramos un obstáculo
 
             # Guardar la posición final del sensor y la distancia
+            sensor_end = (end_x, end_y)
             self.sensors.append((sensor_end, distance))
+
+            # Si se encontró un obstáculo, dibujar un círculo azul en la posición del primer punto detectado
+            if first_obstacle_found:
+                obstacle_x = int(self.x + distance * math.cos(sensor_angle))
+                obstacle_y = int(self.y - distance * math.sin(sensor_angle))
+                pygame.draw.circle(environment.window, (0, 0, 255), (obstacle_x, obstacle_y), 5)  # Dibujar en azul
 
     def update_score(self, delta):
         """Actualiza el puntaje y lo redondea a un decimal."""

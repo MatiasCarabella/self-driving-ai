@@ -24,7 +24,7 @@ action_size = 4  # Las acciones son: acelerar, girar izquierda, girar derecha, n
 agent = QLearningAgent(state_size, action_size)
 
 # Definir el número de episodios de entrenamiento si MANUAL_CONTROL es False
-NUM_EPISODES = 10 if not MANUAL_CONTROL else 1
+NUM_EPISODES = 2 if not MANUAL_CONTROL else 1
 
 # Cargar la Q-table si ya existe (esto es opcional)
 try:
@@ -36,6 +36,7 @@ except FileNotFoundError:
 
 # Bucle de episodios
 def main():
+    continue_training = True  # Flag para continuar el entrenamiento
     for episode in range(NUM_EPISODES):
         print(f"Iniciando episodio {episode + 1}/{NUM_EPISODES}")
 
@@ -45,7 +46,7 @@ def main():
         run = True
         checkpoints = {}
 
-        while run:
+        while run and continue_training:
             clock = pygame.time.Clock()
             clock.tick(60)
             environment.clear_screen()  # Limpiar la pantalla con el color de fondo
@@ -61,7 +62,12 @@ def main():
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    run = False
+                    run = False  # Terminar la ejecución
+                    continue_training = False  # Detener todo el entrenamiento
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:  # Presionar "Esc" para detener el entrenamiento
+                        run = False  # Terminar la ejecución
+                        continue_training = False  # Detener todo el entrenamiento
 
             # Dibujar el circuito
             environment.draw_circuit()
