@@ -3,25 +3,25 @@ import math
 import time
 from checkpoint import Checkpoint
 from environment import Environment
-from config import VEHICLE_MAX_SPEED, VEHICLE_MAX_SPEED_PARTIALLY_OFF, VEHICLE_MAX_SPEED_COMPLETELY_OFF, VEHICLE_ACCELERATION, VEHICLE_DESACCELERATION, VEHICLE_ROTATION_SPEED
+from config import VEHICLE_CONFIG
 
 environment = Environment()
 
 # Clase que representa el vehículo
 class Vehicle:
-    def __init__(self, x, y, width, height, initial_angle):
+    def __init__(self, x, y, initial_angle):
         self.x = x
         self.y = y
-        self.width = width
-        self.height = height
         self.angle = initial_angle
+        self.width = VEHICLE_CONFIG["WIDTH"]
+        self.height = VEHICLE_CONFIG["HEIGHT"]
         self.speed = 0  # Velocidad inicial
-        self.max_speed = VEHICLE_MAX_SPEED  
-        self.max_speed_partially_off = VEHICLE_MAX_SPEED_PARTIALLY_OFF
-        self.max_speed_completely_off = VEHICLE_MAX_SPEED_COMPLETELY_OFF
-        self.acceleration = VEHICLE_ACCELERATION
-        self.desacceleration = VEHICLE_DESACCELERATION
-        self.rotation_speed = VEHICLE_ROTATION_SPEED
+        self.max_speed = VEHICLE_CONFIG["MAX_SPEED"]  
+        self.max_speed_partially_off = VEHICLE_CONFIG["MAX_SPEED_PARTIALLY_OFF"]
+        self.max_speed_completely_off = VEHICLE_CONFIG["MAX_SPEED_COMPLETELY_OFF"]
+        self.acceleration = VEHICLE_CONFIG["ACCELERATION"]
+        self.desacceleration = VEHICLE_CONFIG["DESACCELERATION"]
+        self.rotation_speed = VEHICLE_CONFIG["ROTATION_SPEED"]
         self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self.image.fill(environment.VEHICLE_COLOR)
         self.sensors = []  # Lista de sensores (rayos) con distancia
@@ -36,10 +36,23 @@ class Vehicle:
         for sensor, _ in self.sensors:
             pygame.draw.line(window, environment.SENSOR_COLOR, (self.x, self.y), sensor, 2)
 
-    def update(self):
-        # Movimiento del vehículo
+    def update_manual(self):
+        """Actualiza el vehículo basado en el control manual."""
+        self.handle_input()
+        self.update_position()
+        self.update_sensors()
+
+    def update_from_agent(self, action):
+        """Actualiza el vehículo basado en la acción proporcionada por el agente."""
+        self.handle_agent_action(action)
+        self.update_position()
+        self.update_sensors()
+
+    def handle_input(self):
+        """Maneja la entrada del usuario y actualiza velocidad y ángulo."""
         keys = pygame.key.get_pressed()
 
+        # Manejar la aceleración
         if keys[pygame.K_UP]:
             if self.speed < self.max_speed:
                 self.speed += self.acceleration
@@ -48,17 +61,43 @@ class Vehicle:
         else:
             self.speed *= self.desacceleration  # Desaceleración natural
 
+        # Manejar la rotación
         if keys[pygame.K_LEFT]:
-            self.angle += self.rotation_speed * (self.speed / self.max_speed)  # Girar más rápido a más velocidad
+            self.angle += self.rotation_speed * (self.speed / self.max_speed)
         if keys[pygame.K_RIGHT]:
             self.angle -= self.rotation_speed * (self.speed / self.max_speed)
 
-        # Actualizar la posición basada en el ángulo y velocidad
+    def handle_agent_action(self, action):
+        """Interpreta la acción del agente."""
+        if action == 0:  # Acelerar
+            self.speed = min(self.speed + self.acceleration, self.max_speed)
+        elif action == 1:  # Girar izquierda
+            self.angle += self.rotation_speed * (self.speed / self.max_speed)
+        elif action == 2:  # Girar derecha
+            self.angle -= self.rotation_speed * (self.speed / self.max_speed)
+        elif action == 3:  # No hacer nada
+            self.speed *= self.desacceleration
+
+    def update_from_agent(self, action):
+        """Actualiza el estado del vehículo basado en la acción del agente."""
+        # Las acciones pueden ser: 0: acelerar, 1: frenar, 2: girar izquierda, 3: girar derecha
+        if action == 0:  # Acelerar
+            if self.speed < self.max_speed:
+                self.speed += self.acceleration
+        elif action == 1:  # Frenar
+            pass  # El agente no puede frenar, puedes implementar la lógica que desees
+        elif action == 2:  # Girar izquierda
+            self.angle += self.rotation_speed * (self.speed / self.max_speed)
+        elif action == 3:  # Girar derecha
+            self.angle -= self.rotation_speed * (self.speed / self.max_speed)
+
+    def update_position(self):
+        """Actualiza la posición del vehículo basada en su velocidad y ángulo."""
         rad_angle = math.radians(self.angle)
         new_x = self.x + self.speed * math.cos(rad_angle)
         new_y = self.y - self.speed * math.sin(rad_angle)
 
-        # Comprobar si está completamente fuera o parcialmente fuera
+        # Comprobar el estado del vehículo en la carretera
         road_status = self.check_road_status(new_x, new_y)
 
         if road_status == "on_road":
@@ -67,22 +106,17 @@ class Vehicle:
             self.max_speed = 6  # Restablecer velocidad máxima al volver a la carretera
             self.speed = min(self.speed, self.max_speed)  # Asegurarse de que la velocidad no exceda el máximo
         elif road_status == "partially_off":
-            self.max_speed = self.max_speed_partially_off  # Reducir velocidad máxima si está parcialmente fuera
+            self.max_speed = self.max_speed_partially_off
             if self.speed > self.max_speed_partially_off:
-                self.speed *= self.desacceleration  # Desaceleración natural  # Mantener velocidad dentro de los límites
-            # Permitir el movimiento, pero con penalización de velocidad
+                self.speed *= self.desacceleration  # Mantener velocidad dentro de los límites
             self.x = new_x
             self.y = new_y
         elif road_status == "completely_off":
-            self.max_speed = self.max_speed_completely_off  # Reducir velocidad máxima si está completamente fuera
+            self.max_speed = self.max_speed_completely_off
             if self.speed > self.max_speed_completely_off:
-                self.speed *= self.desacceleration  # Desaceleración natural  # Mantener velocidad dentro de los límites
-            # Permitir el movimiento, pero con penalización de velocidad
+                self.speed *= self.desacceleration  # Mantener velocidad dentro de los límites
             self.x = new_x
             self.y = new_y
-
-        # Actualizar sensores
-        self.update_sensors()
 
     def check_road_status(self, x, y):
         """Determina si el vehículo está en la carretera, parcialmente fuera o completamente fuera"""
@@ -155,7 +189,7 @@ class Vehicle:
     
     # Función para verificar si el vehículo ha cruzado un checkpoint gris
     def check_checkpoint(self, current_time, checkpoints):
-        """Verifica si el vehículo ha cruzado un checkpoint activo."""
+        """Verifica si el vehículo ha cruzado un checkpoint activo y devuelve la recompensa."""
         radius = 2  # Radio de detección
         for dx in range(-radius, radius + 1):
             for dy in range(-radius, radius + 1):
@@ -168,25 +202,29 @@ class Vehicle:
                             position = (check_x, check_y)
                             # Verificar que el checkpoint actual no sea el mismo que el último cruzado
                             if position in checkpoints and position == self.last_checkpoint:
-                                return False  # No recompensar si es el mismo checkpoint
+                                return 0  # No recompensar si es el mismo checkpoint
                             
                             if position in checkpoints:
                                 checkpoint = checkpoints[position]
                                 if checkpoint.is_active(current_time):
                                     checkpoint.last_crossed = current_time
                                     self.last_checkpoint = position  # Actualizar el último checkpoint cruzado
-                                    return True
+                                    self.score += 5  # Aumentar la puntuación
+                                    print(f"Checkpoint cruzado! Puntuación: {self.score}")
+                                    return 5  # Devolver la recompensa
                             else:
                                 checkpoints[position] = Checkpoint(position)
                                 checkpoints[position].last_crossed = current_time
                                 self.last_checkpoint = position  # Guardar nuevo checkpoint cruzado
-                                return True
-        return False
+                                self.score += 5  # Aumentar la puntuación
+                                print(f"Nuevo checkpoint cruzado! Puntuación: {self.score}")
+                                return 5  # Devolver la recompensa
+        return 0  # No se cruzó ningún checkpoint
 
     def check_off_track(self):
-        """Verifica si el vehículo está fuera del circuito y aplica penalizaciones"""
+        """Verifica si el vehículo está fuera del circuito y devuelve la penalización"""
         current_time = time.time()
-        if current_time - self.last_penalty_time >= 0.25:  # Delay de 0.1 segundos
+        if current_time - self.last_penalty_time >= 0.25:  # Delay de 0.25 segundos
             road_status = self.check_road_status(self.x, self.y)
             
             if road_status != "on_road":
@@ -194,3 +232,5 @@ class Vehicle:
                 self.score += penalty
                 self.last_penalty_time = current_time
                 print(f"Penalización: {penalty}. Puntuación total: {self.score}")
+                return penalty
+        return 0  # No hay penalización si está en la carretera o si no ha pasado suficiente tiempo

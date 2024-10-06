@@ -2,7 +2,7 @@ import pygame
 import time
 from vehicle import Vehicle
 from environment import Environment
-from config import EPISODE_DURATION
+from config import MANUAL_CONTROL, EPISODE_DURATION
 
 # Inicializamos PyGame
 pygame.init()
@@ -14,7 +14,7 @@ environment = Environment()
 start_position = environment.find_start_position()
 if start_position is None:
     raise ValueError("No se encontró un punto de inicio en el circuito.")
-vehicle = Vehicle(start_position[0], start_position[1], 20, 10, start_position[2])
+vehicle = Vehicle(start_position[0], start_position[1], start_position[2])
 
 # Bucle principal
 def main():
@@ -46,17 +46,22 @@ def main():
         # Dibujar el circuito
         environment.draw_circuit()
 
-        # Actualizar y dibujar el vehículo
-        vehicle.update()
+        # Verificar si el control es manual o del agente
+        if MANUAL_CONTROL:
+            vehicle.update_manual()
+        else:
+            # Obtener la acción del agente
+            state = agent.get_state(vehicle)
+            action = agent.choose_action(state)
+            vehicle.update_from_agent(action)
+
         vehicle.draw(environment.window)
 
         # Verificar si el vehículo cruzó un checkpoint
-        if vehicle.check_checkpoint(current_time, checkpoints):
-            vehicle.score += 5  # Añadir 5 puntos por cada checkpoint
-            print(f"Checkpoint cruzado! Puntuación: {vehicle.score}")
+        vehicle.score += vehicle.check_checkpoint(current_time, checkpoints)
 
         # Verificar si el vehículo está fuera del circuito
-        vehicle.check_off_track()
+        vehicle.score += vehicle.check_off_track()
 
         # Dibujar la puntuación y el temporizador
         environment.draw_score(vehicle.score)
