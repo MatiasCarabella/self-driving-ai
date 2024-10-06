@@ -5,6 +5,7 @@ from vehicle import Vehicle
 from environment import Environment
 from config import SESSION_CONFIG
 from q_learning_agent import QLearningAgent
+from logger import Logger
 
 # Crear el entorno
 environment = Environment()
@@ -30,6 +31,9 @@ try:
     print("Q-table cargada correctamente.")
 except FileNotFoundError:
     print("No se encontró una Q-table previa. Se empezará desde cero.")
+
+# Inicializar el logger
+logger = Logger()
 
 # Bucle de episodios
 def main():
@@ -103,7 +107,6 @@ def main():
 
             # Si hay colisión con los límites, detener el episodio
             if collision:
-                print("Colisión con los límites de la ventana. Fin del episodio.")
                 run = False
 
             # Dibujar el vehículo
@@ -123,6 +126,9 @@ def main():
             with open("q_table.pkl", "wb") as f:
                 pickle.dump(agent.q_table, f)
             print(f"Episodio {episode + 1} completado. Puntuación: {vehicle.score}")
+
+        # Guardar el log del episodio
+        logger.log_episode(logger.get_last_episode() + 1, vehicle.score)
 
     pygame.quit()
 
