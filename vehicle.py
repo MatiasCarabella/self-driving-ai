@@ -4,7 +4,7 @@ import time
 from sensor import Sensor
 from checkpoint import Checkpoint
 from environment import Environment
-from config import VEHICLE_CONFIG
+from config import VEHICLE_CONFIG, COLOR_CONFIG
 
 environment = Environment()
 

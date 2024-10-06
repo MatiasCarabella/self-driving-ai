@@ -1,20 +1,15 @@
+# Parámetros de la sesión
+SESSION_CONFIG = {
+    "MANUAL_CONTROL": False, # Permite controlar el vehículo con las flechas del teclado
+    "NUM_EPISODES": 15, # Cantidad de episodios
+    "EPISODE_DURATION": 15 # Duración del episodio en segundos
+}
+
 # Configuración general de la ventana
 WINDOW_CONFIG = {
     "WIDTH": 800,
     "HEIGHT": 600
 }
-
-# Colores
-COLOR_CONFIG = {
-    "BLACK": (0, 0, 0),
-    "WHITE": (255, 255, 255),
-    "RED": (255, 0, 0),
-    "GREEN": (0, 255, 0),
-    "BLUE": (0, 0, 255),
-    "GRAY": (128, 128, 128),
-    "YELLOW": (255, 255, 0)
-}
-
 
 # Parámetros del vehículo
 VEHICLE_CONFIG = {
@@ -38,11 +33,15 @@ QL_CONFIG = {
     "MIN_EXPLORATION_RATE": 0.01
 }
 
-# Parámetros de la sesión
-SESSION_CONFIG = {
-    "MANUAL_CONTROL": True, # Permite controlar el vehículo con las flechas del teclado
-    "NUM_EPISODES": 15, # Cantidad de episodios
-    "EPISODE_DURATION": 15 # Duración del episodio en segundos
+# Colores
+COLOR_CONFIG = {
+    "BLACK": (0, 0, 0),
+    "WHITE": (255, 255, 255),
+    "RED": (255, 0, 0),
+    "GREEN": (0, 255, 0),
+    "BLUE": (0, 0, 255),
+    "GRAY": (128, 128, 128),
+    "YELLOW": (255, 255, 0)
 }
  
 FONT_CONFIG = {

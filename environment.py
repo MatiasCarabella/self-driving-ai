@@ -12,7 +12,10 @@ class Environment:
         # Atributos: Colores
         self.ROAD_COLOR = COLOR_CONFIG["BLACK"]
         self.BACKGROUND_COLOR = COLOR_CONFIG["WHITE"]
+        self.VEHICLE_COLOR = COLOR_CONFIG["RED"]
+        self.SENSOR_COLOR = COLOR_CONFIG["GREEN"]
         self.START_COLOR = COLOR_CONFIG["YELLOW"]
+        self.CHECKPOINT_COLOR = COLOR_CONFIG["GRAY"]
         self.TEXT_COLOR =  COLOR_CONFIG["WHITE"]
         self.TEXTBOX_COLOR = COLOR_CONFIG["BLACK"]
 
