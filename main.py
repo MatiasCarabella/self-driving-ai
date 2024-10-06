@@ -24,7 +24,7 @@ action_size = 4  # Las acciones son: acelerar, girar izquierda, girar derecha, n
 agent = QLearningAgent(state_size, action_size)
 
 # Definir el número de episodios de entrenamiento si MANUAL_CONTROL es False
-NUM_EPISODES = 2 if not MANUAL_CONTROL else 1
+NUM_EPISODES = 200 if not MANUAL_CONTROL else 1
 
 # Cargar la Q-table si ya existe (esto es opcional)
 try:

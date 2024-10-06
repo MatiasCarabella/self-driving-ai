@@ -102,6 +102,10 @@ class Vehicle:
         new_x = self.x + self.speed * math.cos(rad_angle)
         new_y = self.y - self.speed * math.sin(rad_angle)
 
+        # Comprobar si está dentro de los límites de la ventana
+        new_x = max(0 + self.width / 2, min(new_x, environment.SCREEN_WIDTH - self.width / 2))
+        new_y = max(0 + self.height / 2, min(new_y, environment.SCREEN_HEIGHT - self.height / 2))
+
         # Comprobar el estado del vehículo en la carretera
         road_status = self.check_road_status(new_x, new_y)
 
