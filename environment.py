@@ -76,3 +76,12 @@ class Environment:
         pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (timer_rect.left - 5, timer_rect.top - 5, 
                                          timer_rect.width + 10, timer_rect.height + 10))
         self.window.blit(timer_text, timer_rect)
+
+    def draw_speed(self, vehicle_speed):
+        """Dibuja la velocidad actual del vehículo en la esquina inferior derecha"""
+        speed_text = self.FONT.render(f"Velocidad: {vehicle_speed:.1f}", True, self.TEXT_COLOR)
+        speed_rect = speed_text.get_rect()
+        speed_rect.bottomright = (self.SCREEN_WIDTH - 10, self.SCREEN_HEIGHT - 10)
+        pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (speed_rect.left - 5, speed_rect.top - 5, 
+                                            speed_rect.width + 10, speed_rect.height + 10))
+        self.window.blit(speed_text, speed_rect)

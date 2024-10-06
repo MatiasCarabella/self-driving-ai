@@ -33,7 +33,7 @@ QL_CONFIG = {
 }
 
 # Otros parámetros
-MANUAL_CONTROL = True # Permite controlar el vehículo con las flechas del teclado
+MANUAL_CONTROL = False # Permite controlar el vehículo con las flechas del teclado
 EPISODE_DURATION = 15  # Duración del episodio en segundos
 FONT_SIZE = 36  # Tamaño de la fuente
 

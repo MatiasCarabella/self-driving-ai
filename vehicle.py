@@ -96,19 +96,6 @@ class Vehicle:
         elif action == 3:  # No hacer nada
             self.speed *= self.desacceleration
 
-    def update_from_agent(self, action):
-        """Actualiza el estado del vehículo basado en la acción del agente."""
-        # Las acciones pueden ser: 0: acelerar, 1: frenar, 2: girar izquierda, 3: girar derecha
-        if action == 0:  # Acelerar
-            if self.speed < self.max_speed:
-                self.speed += self.acceleration
-        elif action == 1:  # Frenar
-            pass  # El agente no puede frenar, puedes implementar la lógica que desees
-        elif action == 2:  # Girar izquierda
-            self.angle += self.rotation_speed * (self.speed / self.max_speed)
-        elif action == 3:  # Girar derecha
-            self.angle -= self.rotation_speed * (self.speed / self.max_speed)
-
     def update_position(self):
         """Actualiza la posición del vehículo basada en su velocidad y ángulo."""
         rad_angle = math.radians(self.angle)
@@ -266,9 +253,9 @@ class Vehicle:
         if current_time - self.last_speed_check_time >= 0.25:
             self.last_speed_check_time = current_time  # Actualizar el tiempo de la última verificación
             
-            if self.speed > 0:
+            if self.speed > 1:
                 self.update_score(0.1)
-                return 0.1 # Recompensa si la velocidad es mayor a 0
+                return 0.1 # Recompensa si la velocidad es mayor a 0.1
             else:
                 self.update_score(-0.1)
                 return -0.1  # Penalización si la velocidad es 0
