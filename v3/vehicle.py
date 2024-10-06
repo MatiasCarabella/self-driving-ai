@@ -5,7 +5,7 @@ import time
 from checkpoint import Checkpoint
 from environment import Environment
 
-enviroment = Environment()
+environment = Environment()
 
 # Clase que representa el vehículo
 class Vehicle:
@@ -23,7 +23,7 @@ class Vehicle:
         self.desacceleration = 0.95
         self.rotation_speed = 4  # Velocidad de rotación
         self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        self.image.fill(enviroment.VEHICLE_COLOR)
+        self.image.fill(environment.VEHICLE_COLOR)
         self.sensors = []  # Lista de sensores (rayos) con distancia
 
     def draw(self, window):
@@ -34,7 +34,7 @@ class Vehicle:
 
         # Dibujar los sensores
         for sensor, _ in self.sensors:
-            pygame.draw.line(window, enviroment.SENSOR_COLOR, (self.x, self.y), sensor, 2)
+            pygame.draw.line(window, environment.SENSOR_COLOR, (self.x, self.y), sensor, 2)
 
     def update(self):
         # Movimiento del vehículo
@@ -128,9 +128,9 @@ class Vehicle:
 
     def is_on_road(self, x, y):
         """Comprueba si una posición dada está sobre la carretera"""
-        if 0 <= x < enviroment.SCREEN_WIDTH and 0 <= y < enviroment.SCREEN_HEIGHT:
-            color_at_position = enviroment.CIRCUIT_IMAGE.get_at((int(x), int(y)))
-            return color_at_position in [enviroment.ROAD_COLOR, enviroment.CHECKPOINT_COLOR, enviroment.START_COLOR]
+        if 0 <= x < environment.SCREEN_WIDTH and 0 <= y < environment.SCREEN_HEIGHT:
+            color_at_position = environment.CIRCUIT_IMAGE.get_at((int(x), int(y)))
+            return color_at_position in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]
         return False
 
     def update_sensors(self):
@@ -162,9 +162,9 @@ class Vehicle:
                 if dx * dx + dy * dy <= radius * radius:  # Área circular
                     check_x = int(self.x + dx)
                     check_y = int(self.y + dy)
-                    if 0 <= check_x < enviroment.SCREEN_WIDTH and 0 <= check_y < enviroment.SCREEN_HEIGHT:
-                        color_at_position = enviroment.CIRCUIT_IMAGE.get_at((check_x, check_y))
-                        if color_at_position == enviroment.CHECKPOINT_COLOR:  # Comprobar si es gris
+                    if 0 <= check_x < environment.SCREEN_WIDTH and 0 <= check_y < environment.SCREEN_HEIGHT:
+                        color_at_position = environment.CIRCUIT_IMAGE.get_at((check_x, check_y))
+                        if color_at_position == environment.CHECKPOINT_COLOR:  # Comprobar si es gris
                             position = (check_x, check_y)
                             # Verificar que el checkpoint actual no sea el mismo que el último cruzado
                             if position in checkpoints and position == self.last_checkpoint:

@@ -31,6 +31,10 @@ class Environment:
         self.TEXT_COLOR =  WHITE
         self.TEXTBOX_COLOR = BLACK
 
+        # Fuente para el texto de puntuación y temporizador
+        pygame.font.init()
+        self.FONT = pygame.font.Font(None, 36)
+
         # Configurar la ventana de PyGame
         self.window = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         pygame.display.set_caption("Self Driving AI")
@@ -62,3 +66,25 @@ class Environment:
     def draw_circuit(self):
         """Dibuja la imagen del circuito en la ventana"""
         self.window.blit(self.CIRCUIT_IMAGE, (0, 0))
+
+    def clear_screen(self):
+        """Limpia la pantalla con el color de fondo"""
+        self.window.fill(self.BACKGROUND_COLOR)
+
+    def draw_score(self, vehicle_score):
+        """Dibuja la puntuación en la esquina superior izquierda"""
+        score_text = self.FONT.render(f"Puntos: {vehicle_score}", True, self.TEXT_COLOR)
+        score_rect = score_text.get_rect()
+        score_rect.topleft = (10, 10)
+        pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (score_rect.left - 5, score_rect.top - 5, 
+                                         score_rect.width + 10, score_rect.height + 10))
+        self.window.blit(score_text, score_rect)
+
+    def draw_timer(self, remaining_time):
+        """Dibuja el temporizador en la esquina superior derecha"""
+        timer_text = self.FONT.render(f"Tiempo: {remaining_time:.1f}", True, self.TEXT_COLOR)
+        timer_rect = timer_text.get_rect()
+        timer_rect.topright = (self.SCREEN_WIDTH - 10, 10)
+        pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (timer_rect.left - 5, timer_rect.top - 5, 
+                                         timer_rect.width + 10, timer_rect.height + 10))
+        self.window.blit(timer_text, timer_rect)
