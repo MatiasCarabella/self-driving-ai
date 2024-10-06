@@ -32,9 +32,13 @@ QL_CONFIG = {
     "MIN_EXPLORATION_RATE": 0.01
 }
 
-# Otros parámetros
-MANUAL_CONTROL = True # Permite controlar el vehículo con las flechas del teclado
-EPISODE_DURATION = 15  # Duración del episodio en segundos
+# Parámetros de la sesión
+SESSION_CONFIG = {
+    "MANUAL_CONTROL": False, # Permite controlar el vehículo con las flechas del teclado
+    "NUM_EPISODES": 200, # Cantidad de episodios
+    "EPISODE_DURATION": 15 # Duración del episodio en segundos
+}
+ 
 FONT_SIZE = 36  # Tamaño de la fuente
 
 

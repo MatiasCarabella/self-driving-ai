@@ -3,7 +3,7 @@ import time
 import pickle  # Para guardar la Q-table
 from vehicle import Vehicle
 from environment import Environment
-from config import MANUAL_CONTROL, EPISODE_DURATION
+from config import SESSION_CONFIG
 from q_learning_agent import QLearningAgent
 
 # Inicializamos PyGame
@@ -24,7 +24,7 @@ action_size = 4  # Las acciones son: acelerar, girar izquierda, girar derecha, n
 agent = QLearningAgent(state_size, action_size)
 
 # Definir el número de episodios de entrenamiento si MANUAL_CONTROL es False
-NUM_EPISODES = 200 if not MANUAL_CONTROL else 1
+NUM_EPISODES = SESSION_CONFIG["NUM_EPISODES"] if not SESSION_CONFIG["MANUAL_CONTROL"] else 1
 
 # Cargar la Q-table si ya existe (esto es opcional)
 try:
@@ -54,7 +54,7 @@ def main():
             current_time = time.time()
             # Obtener el tiempo transcurrido y restante
             elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000  # Tiempo transcurrido en segundos
-            remaining_time = max(0, EPISODE_DURATION - elapsed_time)  # Tiempo restante en segundos
+            remaining_time = max(0, SESSION_CONFIG["EPISODE_DURATION"] - elapsed_time)  # Tiempo restante en segundos
 
             if remaining_time == 0:  # Si se ha acabado el tiempo
                 print(f"Fin del episodio. Puntuación final: {vehicle.score}")
@@ -73,7 +73,7 @@ def main():
             environment.draw_circuit()
 
             # Verificar si el control es manual o del agente
-            if MANUAL_CONTROL:
+            if SESSION_CONFIG["MANUAL_CONTROL"]:
                 vehicle.update_manual()  # Control manual
 
                 vehicle.check_checkpoint(current_time, checkpoints)  # Recompensa por checkpoints
