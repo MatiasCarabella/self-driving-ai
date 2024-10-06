@@ -1,5 +1,6 @@
 import pygame
 import math
+from config import COLOR_CONFIG
 
 class Sensor:
     def __init__(self, vehicle, angle_offset, length):
@@ -39,10 +40,10 @@ class Sensor:
         return self.length if self.is_on_road else 0
 
     def draw(self, window):
-        pygame.draw.line(window, (0, 255, 0), (self.vehicle.x, self.vehicle.y), (self.end_x, self.end_y), 2)
+        pygame.draw.line(window, COLOR_CONFIG["GREEN"], (self.vehicle.x, self.vehicle.y), (self.end_x, self.end_y), 2)
         
         if self.distance != 0:
             obstacle_x = int(self.vehicle.x + abs(self.distance) * math.cos(math.radians(self.vehicle.angle + self.angle_offset)))
             obstacle_y = int(self.vehicle.y - abs(self.distance) * math.sin(math.radians(self.vehicle.angle + self.angle_offset)))
-            color = (0, 0, 255) if self.is_on_road else (255, 0, 0)
+            color = COLOR_CONFIG["BLUE"] if self.is_on_road else COLOR_CONFIG["RED"]
             pygame.draw.circle(window, color, (obstacle_x, obstacle_y), 5)

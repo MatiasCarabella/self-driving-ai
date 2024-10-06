@@ -1,14 +1,20 @@
 # Configuración general de la ventana
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+WINDOW_CONFIG = {
+    "WIDTH": 800,
+    "HEIGHT": 600
+}
 
 # Colores
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-GRAY = (128, 128, 128)
-YELLOW = (255, 255, 0)
+COLOR_CONFIG = {
+    "BLACK": (0, 0, 0),
+    "WHITE": (255, 255, 255),
+    "RED": (255, 0, 0),
+    "GREEN": (0, 255, 0),
+    "BLUE": (0, 0, 255),
+    "GRAY": (128, 128, 128),
+    "YELLOW": (255, 255, 0)
+}
+
 
 # Parámetros del vehículo
 VEHICLE_CONFIG = {
@@ -39,7 +45,7 @@ SESSION_CONFIG = {
     "EPISODE_DURATION": 15 # Duración del episodio en segundos
 }
  
-FONT_BIG = 36  # Tamaño de la fuente grande
-FONT_SMALL = 20  # Tamaño de la fuente chica
-
-
+FONT_CONFIG = {
+    "BIG": 36,  # Tamaño de la fuente grande
+    "SMALL": 20  # Tamaño de la fuente chica
+}

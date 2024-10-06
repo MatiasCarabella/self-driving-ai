@@ -1,31 +1,28 @@
 import os
 import pygame
 import math
-from config import WINDOW_WIDTH, WINDOW_HEIGHT, BLACK, WHITE, RED, GREEN, GRAY, YELLOW, FONT_BIG, FONT_SMALL
+from config import WINDOW_CONFIG, COLOR_CONFIG, FONT_CONFIG
 
 class Environment:
     def __init__(self):
         # Atributos: Dimensiones
-        self.SCREEN_WIDTH = WINDOW_WIDTH
-        self.SCREEN_HEIGHT = WINDOW_HEIGHT
+        self.SCREEN_WIDTH = WINDOW_CONFIG["WIDTH"]
+        self.SCREEN_HEIGHT = WINDOW_CONFIG["HEIGHT"]
 
         # Atributos: Colores
-        self.ROAD_COLOR = BLACK
-        self.BACKGROUND_COLOR = WHITE
-        self.VEHICLE_COLOR = RED
-        self.SENSOR_COLOR = GREEN
-        self.START_COLOR = YELLOW
-        self.CHECKPOINT_COLOR = GRAY
-        self.TEXT_COLOR =  WHITE
-        self.TEXTBOX_COLOR = BLACK
+        self.ROAD_COLOR = COLOR_CONFIG["BLACK"]
+        self.BACKGROUND_COLOR = COLOR_CONFIG["WHITE"]
+        self.START_COLOR = COLOR_CONFIG["YELLOW"]
+        self.TEXT_COLOR =  COLOR_CONFIG["WHITE"]
+        self.TEXTBOX_COLOR = COLOR_CONFIG["BLACK"]
 
         # Inicializamos PyGame
         pygame.init()
 
         # Fuente para el texto de puntuación y temporizador
         pygame.font.init()
-        self.FONT_BIG = pygame.font.Font(None, FONT_BIG)
-        self.FONT_SMALL = pygame.font.Font(None, FONT_SMALL)
+        self.FONT_BIG = pygame.font.Font(None, FONT_CONFIG["BIG"])
+        self.FONT_SMALL = pygame.font.Font(None, FONT_CONFIG["SMALL"])
 
         # Configurar la ventana de PyGame
         self.window = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
