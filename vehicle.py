@@ -257,7 +257,7 @@ class Vehicle:
                 self.update_score(0.1)
                 return 0.1 # Recompensa si la velocidad es mayor a 0.1
             else:
-                self.update_score(-0.1)
-                return -0.1  # Penalización si la velocidad es 0
+                self.update_score(-0.5)
+                return -0.5  # Penalización si la velocidad es 0
         
         return 0  # Si no ha pasado el tiempo, devolver 0 como recompensa

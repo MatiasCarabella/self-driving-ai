@@ -93,7 +93,7 @@ def main():
                 reward += vehicle.check_speed()  # Recompensa basada en la velocidad
 
                 # Actualizar la Q-table
-                agent.update_q_value(state, action, reward, next_state)
+                agent.update_q_value(state, action, round(reward,1), next_state)
 
                 # Decaer la tasa de exploración
                 agent.decay_exploration()
