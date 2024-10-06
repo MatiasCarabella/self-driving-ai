@@ -92,7 +92,7 @@ class Environment:
 
     def draw_sensor_values(self, vehicle_sensors):
         """Dibuja los valores de los sensores en la esquina inferior derecha, justo encima del indicador de velocidad."""
-        sensor_texts = [f"Sensor {i+1}: {sensor[1]:.1f}" for i, sensor in enumerate(vehicle_sensors)]
+        sensor_texts = [f"Sensor {i+1}: {sensor.distance:.1f}" for i, sensor in enumerate(vehicle_sensors)]
         sensor_texts.reverse()  # Invertir el orden de los textos
 
         base_x = self.SCREEN_WIDTH - 10

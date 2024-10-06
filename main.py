@@ -82,7 +82,7 @@ def main():
                 vehicle.check_speed()  # Recompensa basada en la velocidad
             else:
                 # Obtener el estado discreto del vehículo (por ejemplo, distancias de los sensores)
-                state = tuple(int(sensor[1] / 10) for sensor in vehicle.sensors)  # Convertir distancias a estado discreto
+                state = tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)  # Convertir distancias a estado discreto
                 
                 # Elegir una acción usando el agente
                 action = agent.get_action(state)
@@ -91,7 +91,7 @@ def main():
                 collision = vehicle.update_from_agent(action)
 
                 # Obtener el siguiente estado después de la acción
-                next_state = tuple(int(sensor[1] / 10) for sensor in vehicle.sensors)
+                next_state = tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)
 
                 # Obtener la recompensa utilizando las funciones check_checkpoint, check_off_track y check_speed
                 reward = 0

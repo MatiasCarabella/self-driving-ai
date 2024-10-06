@@ -1,7 +1,5 @@
-import os
-
 class Logger:
-    def __init__(self, log_file="training_log.txt"):
+    def __init__(self, log_file="logs/training_log.txt"):
         self.log_file = log_file
 
     def get_last_episode(self):

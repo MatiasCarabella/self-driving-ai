@@ -34,7 +34,7 @@ QL_CONFIG = {
 
 # Parámetros de la sesión
 SESSION_CONFIG = {
-    "MANUAL_CONTROL": False, # Permite controlar el vehículo con las flechas del teclado
+    "MANUAL_CONTROL": True, # Permite controlar el vehículo con las flechas del teclado
     "NUM_EPISODES": 15, # Cantidad de episodios
     "EPISODE_DURATION": 15 # Duración del episodio en segundos
 }
