@@ -19,6 +19,9 @@ class Environment:
         self.TEXT_COLOR =  WHITE
         self.TEXTBOX_COLOR = BLACK
 
+        # Inicializamos PyGame
+        pygame.init()
+
         # Fuente para el texto de puntuación y temporizador
         pygame.font.init()
         self.FONT_BIG = pygame.font.Font(None, FONT_BIG)
@@ -90,9 +93,11 @@ class Environment:
     def draw_sensor_values(self, vehicle_sensors):
         """Dibuja los valores de los sensores en la esquina inferior derecha, justo encima del indicador de velocidad."""
         sensor_texts = [f"Sensor {i+1}: {sensor[1]:.1f}" for i, sensor in enumerate(vehicle_sensors)]
+        sensor_texts.reverse()  # Invertir el orden de los textos
+
         base_x = self.SCREEN_WIDTH - 10
         base_y = self.SCREEN_HEIGHT - 50  # Ubicado justo encima de la velocidad
-        
+
         for i, sensor_text in enumerate(sensor_texts):
             text_surface = self.FONT_SMALL.render(sensor_text, True, self.TEXT_COLOR)
             text_rect = text_surface.get_rect()

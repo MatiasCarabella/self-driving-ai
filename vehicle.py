@@ -55,16 +55,25 @@ class Vehicle:
             pygame.draw.line(window, environment.SENSOR_COLOR, (self.x, self.y), sensor, 2)
 
     def update_manual(self):
-        """Actualiza el vehículo basado en el control manual."""
+        """Actualiza el vehículo basado en el control manual. Retorna True si colisiona con los límites."""
         self.handle_input()
-        self.update_position()
-        self.update_sensors()
+        # Verificar colisión con los límites en update_position
+        collision = self.update_position()
+        # Actualizar sensores solo si no ha colisionado
+        if not collision:
+            self.update_sensors()
+        return collision  # Devolver True si hay colisión, False si no
 
     def update_from_agent(self, action):
-        """Actualiza el vehículo basado en la acción proporcionada por el agente."""
+        """Actualiza el vehículo basado en la acción proporcionada por el agente. Retorna True si colisiona con los límites."""
         self.handle_agent_action(action)
-        self.update_position()
-        self.update_sensors()
+        # Verificar colisión con los límites en update_position
+        collision = self.update_position()
+        # Actualizar sensores solo si no ha colisionado
+        if not collision:
+            self.update_sensors()
+        return collision  # Devolver True si hay colisión, False si no
+
 
     def handle_input(self):
         """Maneja la entrada del usuario y actualiza velocidad y ángulo."""
@@ -97,14 +106,16 @@ class Vehicle:
             self.speed *= self.desacceleration
 
     def update_position(self):
-        """Actualiza la posición del vehículo basada en su velocidad y ángulo."""
+        """Actualiza la posición del vehículo basada en su velocidad y ángulo. 
+        Retorna True si colisiona con los límites de la ventana, False si no."""
         rad_angle = math.radians(self.angle)
         new_x = self.x + self.speed * math.cos(rad_angle)
         new_y = self.y - self.speed * math.sin(rad_angle)
 
         # Comprobar si está dentro de los límites de la ventana
-        new_x = max(0 + self.width / 2, min(new_x, environment.SCREEN_WIDTH - self.width / 2))
-        new_y = max(0 + self.height / 2, min(new_y, environment.SCREEN_HEIGHT - self.height / 2))
+        if new_x < self.width / 2 or new_x > environment.SCREEN_WIDTH - self.width / 2 or \
+        new_y < self.height / 2 or new_y > environment.SCREEN_HEIGHT - self.height / 2:
+            return True  # Colisiona con los límites de la ventana
 
         # Comprobar el estado del vehículo en la carretera
         road_status = self.check_road_status(new_x, new_y)
@@ -126,6 +137,8 @@ class Vehicle:
                 self.speed *= self.desacceleration  # Mantener velocidad dentro de los límites
             self.x = new_x
             self.y = new_y
+
+        return False  # No ha colisionado con los límites
 
     def check_road_status(self, x, y):
         """Determina si el vehículo está en la carretera, parcialmente fuera o completamente fuera"""
@@ -189,8 +202,8 @@ class Vehicle:
             end_x = self.x + sensor_length * math.cos(sensor_angle)
             end_y = self.y - sensor_length * math.sin(sensor_angle)
 
-            # Inicializar la distancia a la longitud máxima del sensor
-            distance = sensor_length
+            # Inicializar la distancia a 0 en lugar de la longitud máxima
+            distance = 0
             first_obstacle_found = False  # Para verificar si se encontró un obstáculo
             is_on_road = self.is_on_road(self.x, self.y)  # Verificar si el vehículo está en la carretera
 
@@ -215,7 +228,7 @@ class Vehicle:
                             first_obstacle_found = True
                             break
 
-            # Guardar la posición del primer obstáculo y dibujar el círculo
+            # Si no se encuentra ningún punto, distance permanece en 0
             if first_obstacle_found:
                 obstacle_x = int(self.x + abs(distance) * math.cos(sensor_angle))
                 obstacle_y = int(self.y - abs(distance) * math.sin(sensor_angle))
@@ -227,6 +240,7 @@ class Vehicle:
             # Guardar la posición final del sensor y la distancia (positiva o negativa)
             sensor_end = (end_x, end_y)
             self.sensors.append((sensor_end, distance))
+
 
     def update_score(self, delta):
         """Actualiza el puntaje y lo redondea a un decimal."""
@@ -256,14 +270,12 @@ class Vehicle:
                                     checkpoint.last_crossed = current_time
                                     self.last_checkpoint = position  # Actualizar el último checkpoint cruzado
                                     self.update_score(5)  # Aumentar la puntuación
-                                    print(f"Checkpoint cruzado! Puntuación: {self.score}")
                                     return 5  # Devolver la recompensa
                             else:
                                 checkpoints[position] = Checkpoint(position)
                                 checkpoints[position].last_crossed = current_time
                                 self.last_checkpoint = position  # Guardar nuevo checkpoint cruzado
                                 self.update_score(5)  # Aumentar la puntuación
-                                print(f"Nuevo checkpoint cruzado! Puntuación: {self.score}")
                                 return 5  # Devolver la recompensa
         return 0  # No se cruzó ningún checkpoint
 
@@ -277,7 +289,6 @@ class Vehicle:
                 penalty = -1 if road_status == "partially_off" else -2  # -1 para salida parcial, -2 para total
                 self.update_score(penalty)
                 self.last_penalty_time = current_time
-                print(f"Penalización: {penalty}. Puntuación total: {self.score}")
                 return penalty
         return 0  # No hay penalización si está en la carretera o si no ha pasado suficiente tiempo
     

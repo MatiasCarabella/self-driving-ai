@@ -6,9 +6,6 @@ from environment import Environment
 from config import SESSION_CONFIG
 from q_learning_agent import QLearningAgent
 
-# Inicializamos PyGame
-pygame.init()
-
 # Crear el entorno
 environment = Environment()
 
@@ -74,7 +71,7 @@ def main():
 
             # Verificar si el control es manual o del agente
             if SESSION_CONFIG["MANUAL_CONTROL"]:
-                vehicle.update_manual()  # Control manual
+                collision = vehicle.update_manual()  # Control manual
 
                 vehicle.check_checkpoint(current_time, checkpoints)  # Recompensa por checkpoints
                 vehicle.check_off_track()  # Penalización por salirse del circuito
@@ -87,7 +84,7 @@ def main():
                 action = agent.get_action(state)
                 
                 # Actualizar el vehículo basado en la acción elegida por el agente
-                vehicle.update_from_agent(action)
+                collision = vehicle.update_from_agent(action)
 
                 # Obtener el siguiente estado después de la acción
                 next_state = tuple(int(sensor[1] / 10) for sensor in vehicle.sensors)
@@ -103,6 +100,11 @@ def main():
 
                 # Decaer la tasa de exploración
                 agent.decay_exploration()
+
+            # Si hay colisión con los límites, detener el episodio
+            if collision:
+                print("Colisión con los límites de la ventana. Fin del episodio.")
+                run = False
 
             # Dibujar el vehículo
             vehicle.draw(environment.window)
