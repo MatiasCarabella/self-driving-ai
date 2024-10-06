@@ -1,7 +1,7 @@
 import os
 import pygame
 import math
-from config import WINDOW_WIDTH, WINDOW_HEIGHT, BLACK, WHITE, RED, GREEN, GRAY, YELLOW, FONT_SIZE
+from config import WINDOW_WIDTH, WINDOW_HEIGHT, BLACK, WHITE, RED, GREEN, GRAY, YELLOW, FONT_BIG, FONT_SMALL
 
 class Environment:
     def __init__(self):
@@ -21,7 +21,8 @@ class Environment:
 
         # Fuente para el texto de puntuación y temporizador
         pygame.font.init()
-        self.FONT = pygame.font.Font(None, FONT_SIZE)
+        self.FONT_BIG = pygame.font.Font(None, FONT_BIG)
+        self.FONT_SMALL = pygame.font.Font(None, FONT_SMALL)
 
         # Configurar la ventana de PyGame
         self.window = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
@@ -61,7 +62,7 @@ class Environment:
 
     def draw_score(self, vehicle_score):
         """Dibuja la puntuación en la esquina superior izquierda"""
-        score_text = self.FONT.render(f"Puntos: {vehicle_score}", True, self.TEXT_COLOR)
+        score_text = self.FONT_BIG.render(f"Puntos: {vehicle_score}", True, self.TEXT_COLOR)
         score_rect = score_text.get_rect()
         score_rect.topleft = (10, 10)
         pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (score_rect.left - 5, score_rect.top - 5, 
@@ -70,7 +71,7 @@ class Environment:
 
     def draw_timer(self, remaining_time):
         """Dibuja el temporizador en la esquina superior derecha"""
-        timer_text = self.FONT.render(f"Tiempo: {remaining_time:.1f}", True, self.TEXT_COLOR)
+        timer_text = self.FONT_BIG.render(f"Tiempo: {remaining_time:.1f}", True, self.TEXT_COLOR)
         timer_rect = timer_text.get_rect()
         timer_rect.topright = (self.SCREEN_WIDTH - 10, 10)
         pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (timer_rect.left - 5, timer_rect.top - 5, 
@@ -79,9 +80,24 @@ class Environment:
 
     def draw_speed(self, vehicle_speed):
         """Dibuja la velocidad actual del vehículo en la esquina inferior derecha"""
-        speed_text = self.FONT.render(f"Velocidad: {vehicle_speed:.1f}", True, self.TEXT_COLOR)
+        speed_text = self.FONT_BIG.render(f"Velocidad: {vehicle_speed:.1f}", True, self.TEXT_COLOR)
         speed_rect = speed_text.get_rect()
         speed_rect.bottomright = (self.SCREEN_WIDTH - 10, self.SCREEN_HEIGHT - 10)
         pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (speed_rect.left - 5, speed_rect.top - 5, 
                                             speed_rect.width + 10, speed_rect.height + 10))
         self.window.blit(speed_text, speed_rect)
+
+    def draw_sensor_values(self, vehicle_sensors):
+        """Dibuja los valores de los sensores en la esquina inferior derecha, justo encima del indicador de velocidad."""
+        sensor_texts = [f"Sensor {i+1}: {sensor[1]:.1f}" for i, sensor in enumerate(vehicle_sensors)]
+        base_x = self.SCREEN_WIDTH - 10
+        base_y = self.SCREEN_HEIGHT - 50  # Ubicado justo encima de la velocidad
+        
+        for i, sensor_text in enumerate(sensor_texts):
+            text_surface = self.FONT_SMALL.render(sensor_text, True, self.TEXT_COLOR)
+            text_rect = text_surface.get_rect()
+            text_rect.bottomright = (base_x, base_y - i * 20)  # Colocar los textos en orden
+            pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (text_rect.left - 5, text_rect.top - 5,
+                                                            text_rect.width + 10, text_rect.height + 10))
+            self.window.blit(text_surface, text_rect)
+

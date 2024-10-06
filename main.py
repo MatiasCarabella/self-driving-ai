@@ -111,12 +111,13 @@ def main():
             environment.draw_score(vehicle.score)
             environment.draw_timer(remaining_time)
             environment.draw_speed(vehicle.speed)
+            environment.draw_sensor_values(vehicle.sensors)
 
             # Actualizar la pantalla
             pygame.display.update()
 
         # Almacenar la Q-table después de cada episodio si el agente está en control
-        if not MANUAL_CONTROL:
+        if not SESSION_CONFIG["MANUAL_CONTROL"]:
             with open("q_table.pkl", "wb") as f:
                 pickle.dump(agent.q_table, f)
             print(f"Episodio {episode + 1} completado. Puntuación: {vehicle.score}")

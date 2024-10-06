@@ -34,11 +34,12 @@ QL_CONFIG = {
 
 # Parámetros de la sesión
 SESSION_CONFIG = {
-    "MANUAL_CONTROL": False, # Permite controlar el vehículo con las flechas del teclado
-    "NUM_EPISODES": 200, # Cantidad de episodios
+    "MANUAL_CONTROL": True, # Permite controlar el vehículo con las flechas del teclado
+    "NUM_EPISODES": 15, # Cantidad de episodios
     "EPISODE_DURATION": 15 # Duración del episodio en segundos
 }
  
-FONT_SIZE = 36  # Tamaño de la fuente
+FONT_BIG = 36  # Tamaño de la fuente grande
+FONT_SMALL = 20  # Tamaño de la fuente chica
 
 

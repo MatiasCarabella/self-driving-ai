@@ -177,7 +177,9 @@ class Vehicle:
         return False
 
     def update_sensors(self):
-        """Actualiza los sensores y devuelve la distancia al obstáculo o carretera"""
+        """Actualiza los sensores y devuelve la distancia al obstáculo o carretera.
+        Colorea en azul si está en el circuito, y en rojo si está fuera."""
+        
         self.sensors = []
         sensor_angles = [-90, -45, 0, 45, 90]  # Ángulos relativos al frente del vehículo
         sensor_length = 150  # Longitud máxima de los sensores
@@ -187,9 +189,10 @@ class Vehicle:
             end_x = self.x + sensor_length * math.cos(sensor_angle)
             end_y = self.y - sensor_length * math.sin(sensor_angle)
 
-            # Calcular la distancia hasta el primer obstáculo
-            distance = sensor_length  # Inicializar a la longitud máxima
+            # Inicializar la distancia a la longitud máxima del sensor
+            distance = sensor_length
             first_obstacle_found = False  # Para verificar si se encontró un obstáculo
+            is_on_road = self.is_on_road(self.x, self.y)  # Verificar si el vehículo está en la carretera
 
             for d in range(int(sensor_length)):
                 check_x = int(self.x + d * math.cos(sensor_angle))
@@ -199,21 +202,31 @@ class Vehicle:
                 if 0 <= check_x < environment.SCREEN_WIDTH and 0 <= check_y < environment.SCREEN_HEIGHT:
                     color_at_position = environment.CIRCUIT_IMAGE.get_at((check_x, check_y))
                     
-                    # Verificar si el color no es de carretera, checkpoint o inicio
-                    if color_at_position not in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
-                        distance = d  # Establecer la distancia al primer obstáculo encontrado
-                        first_obstacle_found = True
-                        break  # Salir del bucle si encontramos un obstáculo
+                    if is_on_road:
+                        # Caso 1: El vehículo está en la carretera, buscar el primer obstáculo fuera del circuito
+                        if color_at_position not in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
+                            distance = d  # Establecer la distancia al primer obstáculo encontrado
+                            first_obstacle_found = True
+                            break
+                    else:
+                        # Caso 2: El vehículo está fuera del circuito, buscar el borde del circuito
+                        if color_at_position in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
+                            distance = -d  # Establecer la distancia negativa hasta el circuito
+                            first_obstacle_found = True
+                            break
 
-            # Guardar la posición final del sensor y la distancia
+            # Guardar la posición del primer obstáculo y dibujar el círculo
+            if first_obstacle_found:
+                obstacle_x = int(self.x + abs(distance) * math.cos(sensor_angle))
+                obstacle_y = int(self.y - abs(distance) * math.sin(sensor_angle))
+                if is_on_road:
+                    pygame.draw.circle(environment.window, (0, 0, 255), (obstacle_x, obstacle_y), 5)  # Azul si está en la carretera
+                else:
+                    pygame.draw.circle(environment.window, (255, 0, 0), (obstacle_x, obstacle_y), 5)  # Rojo si está fuera de la carretera
+
+            # Guardar la posición final del sensor y la distancia (positiva o negativa)
             sensor_end = (end_x, end_y)
             self.sensors.append((sensor_end, distance))
-
-            # Si se encontró un obstáculo, dibujar un círculo azul en la posición del primer punto detectado
-            if first_obstacle_found:
-                obstacle_x = int(self.x + distance * math.cos(sensor_angle))
-                obstacle_y = int(self.y - distance * math.sin(sensor_angle))
-                pygame.draw.circle(environment.window, (0, 0, 255), (obstacle_x, obstacle_y), 5)  # Dibujar en azul
 
     def update_score(self, delta):
         """Actualiza el puntaje y lo redondea a un decimal."""
