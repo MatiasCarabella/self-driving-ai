@@ -65,18 +65,19 @@ def main():
                 if event.type == pygame.QUIT:
                     run = False  # Terminar la ejecución
                     continue_training = False  # Detener todo el entrenamiento
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:  # Presionar "Esc" para detener el entrenamiento
-                        run = False  # Terminar la ejecución
-                        continue_training = False  # Detener todo el entrenamiento
 
             # Dibujar el circuito
             environment.draw_circuit()
 
+            collision = False
+
             # Verificar si el control es manual o del agente
             if SESSION_CONFIG["MANUAL_CONTROL"]:
-                collision = vehicle.update_manual()  # Control manual
-
+                reward = vehicle.update_manual()  # Control manual
+                if (reward != 0):
+                    collision = True
+                
+                # Verificar otras recompensas o penalizaciones
                 vehicle.check_checkpoint(current_time, checkpoints)  # Recompensa por checkpoints
                 vehicle.check_off_track()  # Penalización por salirse del circuito
                 vehicle.check_speed()  # Recompensa basada en la velocidad
@@ -88,24 +89,25 @@ def main():
                 action = agent.get_action(state)
                 
                 # Actualizar el vehículo basado en la acción elegida por el agente
-                collision = vehicle.update_from_agent(action)
+                reward = vehicle.update_from_agent(action)
+                if (reward != 0):
+                    collision = True
 
                 # Obtener el siguiente estado después de la acción
                 next_state = tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)
 
-                # Obtener la recompensa utilizando las funciones check_checkpoint, check_off_track y check_speed
-                reward = 0
+                # Verificar otras recompensas o penalizaciones
                 reward += vehicle.check_checkpoint(current_time, checkpoints)  # Recompensa por checkpoints
                 reward += vehicle.check_off_track()  # Penalización por salirse del circuito
                 reward += vehicle.check_speed()  # Recompensa basada en la velocidad
 
                 # Actualizar la Q-table
-                agent.update_q_value(state, action, round(reward,1), next_state)
+                agent.update_q_value(state, action, round(reward, 1), next_state)
 
                 # Decaer la tasa de exploración
                 agent.decay_exploration()
 
-            # Si hay colisión con los límites, detener el episodio
+            # Si hubo una colisión, detener el episodio
             if collision:
                 run = False
 

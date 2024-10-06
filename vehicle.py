@@ -61,24 +61,38 @@ class Vehicle:
             sensor.draw(window)
 
     def update_manual(self):
-        """Actualiza el vehículo basado en el control manual. Retorna True si colisiona con los límites."""
+        """Actualiza el vehículo basado en el control manual. Devuelve la recompensa según la colisión."""
+        reward = 0  # Inicializar recompensa en 0
         self.handle_input()
+        
         # Verificar colisión con los límites en update_position
         collision = self.update_position()
-        # Actualizar sensores solo si no ha colisionado
-        if not collision:
+        
+        if collision:
+            reward = -100  # Penalización por colisión
+            self.update_score(reward)
+        else:
             self.update_sensors()
-        return collision  # Devolver True si hay colisión, False si no
+    
+        return reward  # Devolver la recompensa
+
 
     def update_from_agent(self, action):
-        """Actualiza el vehículo basado en la acción proporcionada por el agente. Retorna True si colisiona con los límites."""
+        """Actualiza el vehículo basado en la acción proporcionada por el agente. Devuelve la recompensa."""
+        reward = 0  # Inicializar recompensa en 0
         self.handle_agent_action(action)
+        
         # Verificar colisión con los límites en update_position
         collision = self.update_position()
-        # Actualizar sensores solo si no ha colisionado
-        if not collision:
+        
+        if collision:
+            reward = -100  # Penalización por colisión
+            self.update_score(reward)
+        else:
             self.update_sensors()
-        return collision  # Devolver True si hay colisión, False si no
+        
+        return reward  # Devolver la recompensa
+
 
 
     def handle_input(self):
@@ -227,14 +241,14 @@ class Vehicle:
                                 if checkpoint.is_active(current_time):
                                     checkpoint.last_crossed = current_time
                                     self.last_checkpoint = position  # Actualizar el último checkpoint cruzado
-                                    self.update_score(5)  # Aumentar la puntuación
-                                    return 5  # Devolver la recompensa
+                                    self.update_score(10)  # Aumentar la puntuación
+                                    return 10  # Devolver la recompensa
                             else:
                                 checkpoints[position] = Checkpoint(position)
                                 checkpoints[position].last_crossed = current_time
                                 self.last_checkpoint = position  # Guardar nuevo checkpoint cruzado
-                                self.update_score(5)  # Aumentar la puntuación
-                                return 5  # Devolver la recompensa
+                                self.update_score(10)  # Aumentar la puntuación
+                                return 10  # Devolver la recompensa
         return 0  # No se cruzó ningún checkpoint
 
     def check_off_track(self):
