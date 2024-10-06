@@ -3,6 +3,7 @@ import time
 from vehicle import Vehicle
 from environment import Environment
 from config import MANUAL_CONTROL, EPISODE_DURATION
+from q_learning_agent import QLearningAgent
 
 # Inicializamos PyGame
 pygame.init()
@@ -15,6 +16,11 @@ start_position = environment.find_start_position()
 if start_position is None:
     raise ValueError("No se encontró un punto de inicio en el circuito.")
 vehicle = Vehicle(start_position[0], start_position[1], start_position[2])
+
+# Inicializar el agente de Q-learning
+state_size = 5  # Suponiendo que hay 5 sensores
+action_size = 4  # Las acciones son: acelerar, frenar, girar izquierda, girar derecha
+agent = QLearningAgent(state_size, action_size)
 
 # Bucle principal
 def main():
@@ -50,11 +56,15 @@ def main():
         if MANUAL_CONTROL:
             vehicle.update_manual()
         else:
-            # Obtener la acción del agente
-            state = agent.get_state(vehicle)
-            action = agent.choose_action(state)
+            # Obtener el estado discreto del vehículo (por ejemplo, distancias de los sensores)
+            state = tuple(int(sensor[1] / 10) for sensor in vehicle.sensors)  # Convertir distancias a estado discreto
+            
+            # Elegir una acción usando el agente
+            action = agent.get_action(state)
+            
+            # Actualizar el vehículo basado en la acción elegida por el agente
             vehicle.update_from_agent(action)
-
+        
         vehicle.draw(environment.window)
 
         # Verificar si el vehículo cruzó un checkpoint

@@ -13,6 +13,9 @@ class Vehicle:
         self.x = x
         self.y = y
         self.angle = initial_angle
+        self.initial_x = x  # Guardar la posición inicial
+        self.initial_y = y  # Guardar la posición inicial
+        self.initial_angle = initial_angle  # Guardar el ángulo inicial
         self.width = VEHICLE_CONFIG["WIDTH"]
         self.height = VEHICLE_CONFIG["HEIGHT"]
         self.speed = 0  # Velocidad inicial
@@ -25,6 +28,20 @@ class Vehicle:
         self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self.image.fill(environment.VEHICLE_COLOR)
         self.sensors = []  # Lista de sensores (rayos) con distancia
+        self.score = 0  # Puntuación inicial
+        self.last_checkpoint = None  # Último checkpoint cruzado
+        self.last_penalty_time = time.time()  # Tiempo de la última penalización
+
+    def reset(self):
+        """Restablece el vehículo a su estado inicial."""
+        self.x = self.initial_x  # Restablecer la posición inicial
+        self.y = self.initial_y
+        self.angle = self.initial_angle  # Restablecer el ángulo inicial
+        self.speed = 0  # Restablecer la velocidad inicial
+        self.sensors = []  # Limpiar los sensores
+        self.score = 0  # Reiniciar la puntuación
+        self.last_checkpoint = None  # Reiniciar el último checkpoint cruzado
+        self.last_penalty_time = time.time()  # Reiniciar el tiempo de la última penalización
 
     def draw(self, window):
         # Rotar la imagen del vehículo sin cambiar sus dimensiones originales
