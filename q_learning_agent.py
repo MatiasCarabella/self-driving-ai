@@ -1,17 +1,22 @@
 import numpy as np
 import random
 from collections import defaultdict
+from config import QL_CONFIG
 
 class QLearningAgent:
-    def __init__(self, state_size, action_size, learning_rate=0.1, discount_factor=0.95, exploration_rate=1.0, exploration_decay=0.995, min_exploration_rate=0.01):
+    def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.q_table = defaultdict(lambda: np.zeros(action_size))  # Inicializar tabla Q con 0
-        self.learning_rate = learning_rate
-        self.discount_factor = discount_factor
-        self.exploration_rate = exploration_rate
-        self.exploration_decay = exploration_decay
-        self.min_exploration_rate = min_exploration_rate
+        self.q_table = defaultdict(self._default_q_values)
+        self.learning_rate = QL_CONFIG["LEARNING_RATE"]
+        self.discount_factor = QL_CONFIG["DISCOUNT_FACTOR"]
+        self.exploration_rate = QL_CONFIG["EXPLORATION_RATE"]
+        self.exploration_decay = QL_CONFIG["EXPLORATION_DECAY"]
+        self.min_exploration_rate = QL_CONFIG["MIN_EXPLORATION_RATE"]
+
+    def _default_q_values(self):
+        """Función que devuelve un vector de ceros para la tabla Q."""
+        return np.zeros(self.action_size)
 
     def get_action(self, state):
         """Elige una acción basado en la política epsilon-greedy."""

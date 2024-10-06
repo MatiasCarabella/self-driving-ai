@@ -1,5 +1,6 @@
 import pygame
 import time
+import pickle  # Para guardar la Q-table
 from vehicle import Vehicle
 from environment import Environment
 from config import MANUAL_CONTROL, EPISODE_DURATION
@@ -19,66 +20,99 @@ vehicle = Vehicle(start_position[0], start_position[1], start_position[2])
 
 # Inicializar el agente de Q-learning
 state_size = 5  # Suponiendo que hay 5 sensores
-action_size = 4  # Las acciones son: acelerar, frenar, girar izquierda, girar derecha
+action_size = 4  # Las acciones son: acelerar, girar izquierda, girar derecha, no hacer nada
 agent = QLearningAgent(state_size, action_size)
 
-# Bucle principal
+# Definir el número de episodios de entrenamiento si MANUAL_CONTROL es False
+NUM_EPISODES = 5 if not MANUAL_CONTROL else 1
+
+# Cargar la Q-table si ya existe (esto es opcional)
+try:
+    with open("q_table.pkl", "rb") as f:
+        agent.q_table = pickle.load(f)
+    print("Q-table cargada correctamente.")
+except FileNotFoundError:
+    print("No se encontró una Q-table previa. Se empezará desde cero.")
+
+# Bucle de episodios
 def main():
-    clock = pygame.time.Clock()
-    run = True
-    checkpoints = {}  # Diccionario para almacenar checkpoints y sus tiempos
-    start_ticks = pygame.time.get_ticks()  # Iniciar el temporizador
-    vehicle.last_penalty_time = time.time()  # Inicializar el tiempo de la última penalización
-    vehicle.score = 0  # Inicializar la puntuación del vehículo
-    vehicle.last_checkpoint = None  # Inicializar el último checkpoint cruzado
+    for episode in range(NUM_EPISODES):
+        print(f"Iniciando episodio {episode + 1}/{NUM_EPISODES}")
 
-    while run:
-        clock.tick(60)
-        environment.clear_screen()  # Limpiar la pantalla con el color de fondo
-        
-        current_time = time.time()
-        # Obtener el tiempo transcurrido y restante
-        elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000  # Tiempo transcurrido en segundos
-        remaining_time = max(0, EPISODE_DURATION - elapsed_time)  # Tiempo restante en segundos
+        # Resetear el vehículo al inicio de cada episodio
+        vehicle.reset()
+        start_ticks = pygame.time.get_ticks()  # Reiniciar el temporizador
+        run = True
+        checkpoints = {}
 
-        if remaining_time == 0:  # Si se ha acabado el tiempo
-            print(f"Fin del episodio. Puntuación final: {vehicle.score}")
-            run = False  # Terminar el episodio
+        while run:
+            clock = pygame.time.Clock()
+            clock.tick(60)
+            environment.clear_screen()  # Limpiar la pantalla con el color de fondo
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
+            current_time = time.time()
+            # Obtener el tiempo transcurrido y restante
+            elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000  # Tiempo transcurrido en segundos
+            remaining_time = max(0, EPISODE_DURATION - elapsed_time)  # Tiempo restante en segundos
 
-        # Dibujar el circuito
-        environment.draw_circuit()
+            if remaining_time == 0:  # Si se ha acabado el tiempo
+                print(f"Fin del episodio. Puntuación final: {vehicle.score}")
+                run = False  # Terminar el episodio
 
-        # Verificar si el control es manual o del agente
-        if MANUAL_CONTROL:
-            vehicle.update_manual()
-        else:
-            # Obtener el estado discreto del vehículo (por ejemplo, distancias de los sensores)
-            state = tuple(int(sensor[1] / 10) for sensor in vehicle.sensors)  # Convertir distancias a estado discreto
-            
-            # Elegir una acción usando el agente
-            action = agent.get_action(state)
-            
-            # Actualizar el vehículo basado en la acción elegida por el agente
-            vehicle.update_from_agent(action)
-        
-        vehicle.draw(environment.window)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
 
-        # Verificar si el vehículo cruzó un checkpoint
-        vehicle.score += vehicle.check_checkpoint(current_time, checkpoints)
+            # Dibujar el circuito
+            environment.draw_circuit()
 
-        # Verificar si el vehículo está fuera del circuito
-        vehicle.score += vehicle.check_off_track()
+            # Verificar si el control es manual o del agente
+            if MANUAL_CONTROL:
+                vehicle.update_manual()  # Control manual
 
-        # Dibujar la puntuación y el temporizador
-        environment.draw_score(vehicle.score)
-        environment.draw_timer(remaining_time)
+                vehicle.check_checkpoint(current_time, checkpoints)  # Recompensa por checkpoints
+                vehicle.check_off_track()  # Penalización por salirse del circuito
+                vehicle.check_speed()  # Recompensa basada en la velocidad
+            else:
+                # Obtener el estado discreto del vehículo (por ejemplo, distancias de los sensores)
+                state = tuple(int(sensor[1] / 10) for sensor in vehicle.sensors)  # Convertir distancias a estado discreto
+                
+                # Elegir una acción usando el agente
+                action = agent.get_action(state)
+                
+                # Actualizar el vehículo basado en la acción elegida por el agente
+                vehicle.update_from_agent(action)
 
-        # Actualizar la pantalla
-        pygame.display.update()
+                # Obtener el siguiente estado después de la acción
+                next_state = tuple(int(sensor[1] / 10) for sensor in vehicle.sensors)
+
+                # Obtener la recompensa utilizando las funciones check_checkpoint, check_off_track y check_speed
+                reward = 0
+                reward += vehicle.check_checkpoint(current_time, checkpoints)  # Recompensa por checkpoints
+                reward += vehicle.check_off_track()  # Penalización por salirse del circuito
+                reward += vehicle.check_speed()  # Recompensa basada en la velocidad
+
+                # Actualizar la Q-table
+                agent.update_q_value(state, action, reward, next_state)
+
+                # Decaer la tasa de exploración
+                agent.decay_exploration()
+
+            # Dibujar el vehículo
+            vehicle.draw(environment.window)
+
+            # Dibujar la puntuación y el temporizador
+            environment.draw_score(vehicle.score)
+            environment.draw_timer(remaining_time)
+
+            # Actualizar la pantalla
+            pygame.display.update()
+
+        # Almacenar la Q-table después de cada episodio si el agente está en control
+        if not MANUAL_CONTROL:
+            with open("q_table.pkl", "wb") as f:
+                pickle.dump(agent.q_table, f)
+            print(f"Episodio {episode + 1} completado. Puntuación: {vehicle.score}")
 
     pygame.quit()
 

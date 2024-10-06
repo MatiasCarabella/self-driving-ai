@@ -31,6 +31,7 @@ class Vehicle:
         self.score = 0  # Puntuación inicial
         self.last_checkpoint = None  # Último checkpoint cruzado
         self.last_penalty_time = time.time()  # Tiempo de la última penalización
+        self.last_speed_check_time = time.time()  # Tiempo de la última verificación de velocidad
 
     def reset(self):
         """Restablece el vehículo a su estado inicial."""
@@ -203,6 +204,11 @@ class Vehicle:
 
             # Guardar la posición final del sensor y la distancia
             self.sensors.append((sensor_end, distance))
+
+    def update_score(self, delta):
+        """Actualiza el puntaje y lo redondea a un decimal."""
+        self.score += delta
+        self.score = round(self.score, 1)  # Redondear el score a un decimal
     
     # Función para verificar si el vehículo ha cruzado un checkpoint gris
     def check_checkpoint(self, current_time, checkpoints):
@@ -226,14 +232,14 @@ class Vehicle:
                                 if checkpoint.is_active(current_time):
                                     checkpoint.last_crossed = current_time
                                     self.last_checkpoint = position  # Actualizar el último checkpoint cruzado
-                                    self.score += 5  # Aumentar la puntuación
+                                    self.update_score(5)  # Aumentar la puntuación
                                     print(f"Checkpoint cruzado! Puntuación: {self.score}")
                                     return 5  # Devolver la recompensa
                             else:
                                 checkpoints[position] = Checkpoint(position)
                                 checkpoints[position].last_crossed = current_time
                                 self.last_checkpoint = position  # Guardar nuevo checkpoint cruzado
-                                self.score += 5  # Aumentar la puntuación
+                                self.update_score(5)  # Aumentar la puntuación
                                 print(f"Nuevo checkpoint cruzado! Puntuación: {self.score}")
                                 return 5  # Devolver la recompensa
         return 0  # No se cruzó ningún checkpoint
@@ -246,8 +252,25 @@ class Vehicle:
             
             if road_status != "on_road":
                 penalty = -1 if road_status == "partially_off" else -2  # -1 para salida parcial, -2 para total
-                self.score += penalty
+                self.update_score(penalty)
                 self.last_penalty_time = current_time
                 print(f"Penalización: {penalty}. Puntuación total: {self.score}")
                 return penalty
         return 0  # No hay penalización si está en la carretera o si no ha pasado suficiente tiempo
+    
+    def check_speed(self):
+        """Verifica la velocidad del vehículo y devuelve una recompensa proporcional a la velocidad, con delay."""
+        current_time = time.time()
+        
+        # Comprobar si ha pasado el tiempo suficiente desde la última verificación
+        if current_time - self.last_speed_check_time >= 0.25:
+            self.last_speed_check_time = current_time  # Actualizar el tiempo de la última verificación
+            
+            if self.speed > 0:
+                self.update_score(0.1)
+                return 0.1 # Recompensa si la velocidad es mayor a 0
+            else:
+                self.update_score(-0.1)
+                return -0.1  # Penalización si la velocidad es 0
+        
+        return 0  # Si no ha pasado el tiempo, devolver 0 como recompensa

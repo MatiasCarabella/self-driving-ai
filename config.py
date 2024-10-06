@@ -22,6 +22,16 @@ VEHICLE_CONFIG = {
     "ROTATION_SPEED": 4
 }
 
+
+# Parámetros del agente Q-learning
+QL_CONFIG = {
+    "LEARNING_RATE": 0.1,
+    "DISCOUNT_FACTOR": 0.95,
+    "EXPLORATION_RATE": 1.0,
+    "EXPLORATION_DECAY": 0.995,
+    "MIN_EXPLORATION_RATE": 0.01
+}
+
 # Otros parámetros
 MANUAL_CONTROL = True # Permite controlar el vehículo con las flechas del teclado
 EPISODE_DURATION = 15  # Duración del episodio en segundos
