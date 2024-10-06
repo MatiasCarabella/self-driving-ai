@@ -1,25 +1,13 @@
 import os
 import pygame
 import math
-
-# Constantes
-
-# Dimensiones de la ventana
-WIDTH, HEIGHT = 800, 600
-
-# Colores del entorno
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-GRAY = (128, 128, 128)
-YELLOW = (255, 255, 0)
+from config import WINDOW_WIDTH, WINDOW_HEIGHT, BLACK, WHITE, RED, GREEN, GRAY, YELLOW, FONT_SIZE
 
 class Environment:
     def __init__(self):
         # Atributos: Dimensiones
-        self.SCREEN_WIDTH = WIDTH
-        self.SCREEN_HEIGHT = HEIGHT
+        self.SCREEN_WIDTH = WINDOW_WIDTH
+        self.SCREEN_HEIGHT = WINDOW_HEIGHT
 
         # Atributos: Colores
         self.ROAD_COLOR = BLACK
@@ -33,7 +21,7 @@ class Environment:
 
         # Fuente para el texto de puntuación y temporizador
         pygame.font.init()
-        self.FONT = pygame.font.Font(None, 36)
+        self.FONT = pygame.font.Font(None, FONT_SIZE)
 
         # Configurar la ventana de PyGame
         self.window = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
@@ -41,7 +29,7 @@ class Environment:
 
         # Obtener la ruta absoluta del directorio donde se está ejecutando el archivo .py
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        circuit_image_path = os.path.join(current_directory, "circuito.png")
+        circuit_image_path = os.path.join(current_directory, "assets/images/circuit.png")
 
         # Cargar la imagen del circuito desde la ruta relativa
         self.CIRCUIT_IMAGE = pygame.image.load(circuit_image_path).convert()

@@ -1,9 +1,9 @@
-import os
 import pygame
 import math
 import time
 from checkpoint import Checkpoint
 from environment import Environment
+from config import VEHICLE_MAX_SPEED, VEHICLE_MAX_SPEED_PARTIALLY_OFF, VEHICLE_MAX_SPEED_COMPLETELY_OFF, VEHICLE_ACCELERATION, VEHICLE_DESACCELERATION, VEHICLE_ROTATION_SPEED
 
 environment = Environment()
 
@@ -16,12 +16,12 @@ class Vehicle:
         self.height = height
         self.angle = initial_angle
         self.speed = 0  # Velocidad inicial
-        self.max_speed = 6  # Velocidad máxima en carretera
-        self.max_speed_partially_off = 3  # Velocidad máxima cuando está parcialmente fuera
-        self.max_speed_completely_off = 1  # Velocidad máxima cuando está completamente fuera
-        self.acceleration = 0.2
-        self.desacceleration = 0.95
-        self.rotation_speed = 4  # Velocidad de rotación
+        self.max_speed = VEHICLE_MAX_SPEED  
+        self.max_speed_partially_off = VEHICLE_MAX_SPEED_PARTIALLY_OFF
+        self.max_speed_completely_off = VEHICLE_MAX_SPEED_COMPLETELY_OFF
+        self.acceleration = VEHICLE_ACCELERATION
+        self.desacceleration = VEHICLE_DESACCELERATION
+        self.rotation_speed = VEHICLE_ROTATION_SPEED
         self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self.image.fill(environment.VEHICLE_COLOR)
         self.sensors = []  # Lista de sensores (rayos) con distancia

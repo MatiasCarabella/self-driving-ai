@@ -2,12 +2,10 @@ import pygame
 import time
 from vehicle import Vehicle
 from environment import Environment
+from config import EPISODE_DURATION
 
 # Inicializamos PyGame
 pygame.init()
-
-# Duración del episodio en segundos
-EPISODE_DURATION = 15
 
 # Crear el entorno
 environment = Environment()
