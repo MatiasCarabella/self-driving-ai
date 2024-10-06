@@ -1,7 +1,7 @@
 # Parámetros de la sesión
 SESSION_CONFIG = {
     "MANUAL_CONTROL": False, # Permite controlar el vehículo con las flechas del teclado
-    "NUM_EPISODES": 15, # Cantidad de episodios
+    "NUM_EPISODES": 50, # Cantidad de episodios
     "EPISODE_DURATION": 15 # Duración del episodio en segundos
 }
 
