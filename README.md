@@ -1,6 +1,5 @@
 # 2D Self-Driving Car Simulation
 
-## About This Project
 This project is a 2D self-driving car simulation developed in Python using Pygame. It features a Q-learning agent that learns to navigate a circuit by interacting with its environment and optimizing its actions through a reward system. This simulation serves as an educational tool for understanding reinforcement learning concepts and their practical applications in autonomous driving technology.
 
 ## Features
@@ -29,7 +28,7 @@ cd self-driving-ai
 ```bash
 python main.py
 ```
-4. Let the AI agent learn through Q-learning, or control the vehicle yourself if you enabled MANUAL_CONTROL = True in the config.py file
+4. Let the AI agent learn through Q-learning, or control the vehicle yourself if you enabled MANUAL_CONTROL = True in the [config.py](https://github.com/MatiasCarabella/self-learning-ai.git) file
 
 ## Configuration
 
