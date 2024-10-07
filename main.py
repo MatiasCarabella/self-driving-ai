@@ -1,5 +1,4 @@
 import pygame
-import time
 import pickle
 from vehicle import Vehicle
 from environment import Environment
@@ -71,7 +70,7 @@ def main():
         raise ValueError("No starting point found on the circuit.")
 
     vehicle = Vehicle(*start_position)
-    state_size, action_size = 8, 4
+    state_size, action_size = 6, 4
     agent = QLearningAgent(state_size, action_size)
     agent.q_table = load_q_table() or agent.q_table
 

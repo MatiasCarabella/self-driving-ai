@@ -65,9 +65,9 @@ class Vehicle:
         """Get the current state of the vehicle."""
         road_status = self.check_road_status(self.x, self.y)
         return (
-            1 if road_status != "completely_off" else 0,
+            # 1 if road_status != "completely_off" else 0,
             int(self.speed),
-            int(self.angle),
+            # int(self.angle),
         ) + tuple(int(sensor.distance / 10) for sensor in self.sensors)
 
     def normalize_angle(self, angle):
@@ -129,10 +129,10 @@ class Vehicle:
         new_x = self.x + self.speed * math.cos(rad_angle)
         new_y = self.y - self.speed * math.sin(rad_angle)
 
-        # Check if within window boundaries
+        # Check if the vehicle collides with the window boundaries
         if new_x < self.width / 2 or new_x > environment.SCREEN_WIDTH - self.width / 2 or \
         new_y < self.height / 2 or new_y > environment.SCREEN_HEIGHT - self.height / 2:
-            return True  # Collides with window boundaries
+            return True  # Indicate that the vehicle collided with the window boundaries
 
         # Check vehicle's road status
         road_status = self.check_road_status(new_x, new_y)
