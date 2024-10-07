@@ -48,12 +48,10 @@ def run_episode(environment, vehicle, agent, manual_control):
             vehicle.check_off_track() + vehicle.check_speed()
         else:
             state = vehicle.get_state()  # Use the new method from Vehicle class
-            print(state)
             action = agent.get_action(state)
             vehicle.update_from_agent(action)
             reward = vehicle.check_off_track() + vehicle.check_speed()
             next_state = vehicle.get_state()  # Use the new method again
-            print(next_state)
             agent.update_q_value(state, action, round(reward, 1), next_state)
             agent.decay_exploration()
 
