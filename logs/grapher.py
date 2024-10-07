@@ -4,33 +4,34 @@ import numpy as np
 
 class Grapher:
     def __init__(self, log_file):
-        """Initialize the Grapher with the log file path."""
+        """Initialize the Grapher with the path to the log file."""
         self.log_file = log_file
-        self.episodes = []
-        self.scores = []
+        self.episodes = []  # List to store episode numbers
+        self.scores = []    # List to store scores
 
     def read_log(self):
         """Read the log file and extract episode numbers and scores."""
         with open(self.log_file, "r") as f:
             for line in f:
-                episode, score = line.strip().split(", ")
-                self.episodes.append(int(episode))
-                self.scores.append(float(score))
+                # Each line contains a score; append the score to the scores list
+                score = float(line.strip())
+                self.scores.append(score)
+                self.episodes.append(len(self.scores))  # Episode number is the index in the list
 
     def plot_progress(self):
         """Plot the agent's progress over the episodes."""
         plt.figure(figsize=(10, 6))
         plt.plot(self.episodes, self.scores, marker='o', linestyle='-', color='b')
-        plt.title("Agent Progress Over Episodes")
+        plt.title("Agent progress (Score) over Episode number")
         plt.xlabel("Episode Number")
         plt.ylabel("Final Score")
         plt.axhline(0, color='red', linestyle='--', label='Score 0')  # Horizontal line at 0
         plt.legend()
         plt.grid()
 
-        # Desired number of ticks
-        num_ticks_x = 20  # Number of ticks on the X axis
-        num_ticks_y = 15  # Number of ticks on the Y axis
+        # Dynamically determine the number of ticks
+        num_ticks_x = min(20, len(self.episodes))  # Number of ticks on the X axis (max 20)
+        num_ticks_y = 15  # Fixed number of ticks on the Y axis
 
         # Calculate tick spacing for the X axis
         x_min = round_to_nearest_five(min(self.episodes))  # Round the minimum to the nearest multiple of 5

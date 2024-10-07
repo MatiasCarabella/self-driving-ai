@@ -130,8 +130,8 @@ def main():
             print(f"Episode {episode + 1} completed. Final score: {vehicle.score}")
 
         # Log the episode data
-        logger.log_episode(logger.get_last_episode() + 1, vehicle.score)
-
+        logger.log_score(vehicle.score)
+        
     pygame.quit()
 
 # Run the main function
