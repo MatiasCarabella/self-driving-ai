@@ -28,7 +28,9 @@ cd self-driving-ai
 ```bash
 python main.py
 ```
-4. Let the AI agent learn through Q-learning, or control the vehicle yourself if you enabled `MANUAL_CONTROL = True` in the [config.py](https://github.com/MatiasCarabella/self-learning-ai.git) file
+4. Let the AI agent learn through Q-learning
+
+    <sup>Or control the vehicle yourself if you enabled `MANUAL_CONTROL = True` in the [config.py](https://github.com/MatiasCarabella/self-learning-ai.git) file<sup>
 
 ## Configuration
 
@@ -46,7 +48,11 @@ To visualize the agent's progress, use the grapher.py script:
 ```bash
 python grapher.py
 ```
-This will generate a graph of the scores over episodes, allowing you to see how the agent is improving over time.
+This will generate a graph of the scores over episodes, allowing you to see how the agent is improving over time:
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/8f31ab34-a9e3-42d2-8e1b-ec9e521d315c" />
+</p>
+
 ## License
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/MatiasCarabella/self-learning-ai/blob/main/LICENSE) file for details.
 
