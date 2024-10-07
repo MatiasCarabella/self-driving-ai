@@ -37,15 +37,29 @@ class Grapher:
         x_min = round_to_nearest_five(min(self.episodes))  # Round the minimum to the nearest multiple of 5
         x_max = round_to_nearest_five(max(self.episodes))  # Round the maximum to the nearest multiple of 5
         tick_spacing_x = round_to_nearest_five((x_max - x_min) / num_ticks_x)  # Round to the nearest multiple of 5
+
+        # Ensure tick_spacing_x is never zero
+        tick_spacing_x = max(tick_spacing_x, 1)
+        
         x_ticks = range(x_min, x_max + 1, tick_spacing_x)  # Generate ticks
         plt.xticks(x_ticks)  # Apply ticks to the X axis
 
         # Calculate tick spacing for the Y axis
-        y_min = round_to_nearest_five(min(self.scores))  # Round the minimum to the nearest multiple of 5
-        y_max = round_to_nearest_five(max(self.scores))  # Round the maximum to the nearest multiple of 5
-        tick_spacing_y = round_to_nearest_five((y_max - y_min) / num_ticks_y)  # Round to the nearest multiple of 5
-        y_ticks = np.arange(y_min, y_max + tick_spacing_y, tick_spacing_y)  # Generate ticks
-        plt.yticks(y_ticks)  # Apply ticks to the Y axis
+        y_min = round_to_nearest_five(min(self.scores))
+        y_max = round_to_nearest_five(max(self.scores))
+        
+        if y_min == y_max:
+            # If all scores are the same, create a range around that value
+            y_min = y_min - 5
+            y_max = y_max + 5
+        
+        tick_spacing_y = round_to_nearest_five((y_max - y_min) / num_ticks_y)
+        
+        # Ensure tick_spacing_y is never zero
+        tick_spacing_y = max(tick_spacing_y, 1)
+        
+        y_ticks = np.arange(y_min, y_max + tick_spacing_y, tick_spacing_y)
+        plt.yticks(y_ticks)
 
         plt.show()
 

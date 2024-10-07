@@ -63,6 +63,15 @@ class Environment:
         """Clear the screen with the background color."""
         self.window.fill(self.BACKGROUND_COLOR)
 
+    def draw_hud(self, vehicle, remaining_time):
+        """Draw the entire HUD (Head-Up Display)."""
+        self.draw_score(vehicle.score)
+        self.draw_timer(remaining_time)
+        self.draw_speed(vehicle.speed)
+        self.draw_sensor_values(vehicle.sensors)
+        is_on_track = vehicle.check_road_status(vehicle.x, vehicle.y) != "completely_off"
+        self.draw_vehicle_status(is_on_track, vehicle.angle)
+
     def draw_score(self, vehicle_score):
         """Draw the score in the top-left corner."""
         score_text = self.FONT_BIG.render(f"Score: {vehicle_score}", True, self.TEXT_COLOR)

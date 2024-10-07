@@ -61,6 +61,15 @@ class Vehicle:
         for sensor in self.sensors:
             sensor.draw(window)
 
+    def get_state(self):
+        """Get the current state of the vehicle."""
+        road_status = self.check_road_status(self.x, self.y)
+        return (
+            1 if road_status != "completely_off" else 0,
+            int(self.speed),
+            int(self.angle),
+        ) + tuple(int(sensor.distance / 10) for sensor in self.sensors)
+
     def normalize_angle(self, angle):
         """Normalize the angle to be between 0 and 360 degrees."""
         return angle % 360
@@ -70,36 +79,16 @@ class Vehicle:
         self.angle = self.normalize_angle(self.angle + delta)
 
     def update_manual(self):
-        """Update the vehicle based on manual control. Return the collision penalty."""
-        reward = 0  # Initialize reward to 0
+        """Update the vehicle based on manual control."""
         self.handle_input()
-        
-        # Check for collision with screen boundaries in update_position
-        collision = self.update_position()
-        
-        if collision:
-            reward = -100  # Penalty for collision
-            self.update_score(reward)
-        else:
-            self.update_sensors()
-    
-        return reward  # Return the reward
+        self.update_position()
+        self.update_sensors()
 
     def update_from_agent(self, action):
-        """Update the vehicle based on the agent's action. Return the collision penalty."""
-        reward = 0  # Initialize reward to 0
+        """Update the vehicle based on the agent's action."""
         self.handle_agent_action(action)
-        
-        # Check for collision with screen boundaries in update_position
-        collision = self.update_position()
-        
-        if collision:
-            reward = -100  # Penalty for collision
-            self.update_score(reward)
-        else:
-            self.update_sensors()
-        
-        return reward  # Return the reward
+        self.update_position()
+        self.update_sensors()
 
     def handle_input(self):
         """Handle user input and update speed and angle."""
@@ -284,13 +273,15 @@ class Vehicle:
             reward = 0
             
             if self.speed >= 6:  # Highest reward for speed >= 6
-                reward = 2
+                reward = 9
             elif self.speed >= 3:  # Medium reward for speed >= 3
-                reward = 1.5
-            elif self.speed >= 1:  # Default reward for speed > 1
-                reward = 1
-            else:  # Penalize for no speed
-                reward = -0.5
+                reward = 3
+            elif self.speed >= 1.5:  # Default reward for speed > 1.5
+                reward = 2
+            elif self.speed >= 0.5:  # No reward for speed > 0.5
+                reward = 0
+            else:  # Penalize for no speed (below 0.5)
+                reward = -1
 
             self.update_score(reward)  # Update the vehicle's score based on the reward
             return reward  # Return the reward

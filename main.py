@@ -19,14 +19,6 @@ def save_q_table(q_table):
     with open("q_table.pkl", "wb") as f:
         pickle.dump(q_table, f)
 
-def get_state(vehicle):
-    road_status = vehicle.check_road_status(vehicle.x, vehicle.y)
-    return (
-        1 if road_status != "completely_off" else 0,
-        int(vehicle.speed),
-        int(vehicle.angle),
-    ) + tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)
-
 def run_episode(environment, vehicle, agent, manual_control):
     start_ticks = pygame.time.get_ticks()
     run = True
@@ -53,34 +45,24 @@ def run_episode(environment, vehicle, agent, manual_control):
         environment.draw_circuit()
 
         if manual_control:
-            reward = vehicle.update_manual()
-            if reward != 0:
-                run = False
-            reward += vehicle.check_off_track() + vehicle.check_speed()
+            vehicle.update_manual()
+            vehicle.check_off_track() + vehicle.check_speed()
         else:
-            state = get_state(vehicle)
+            state = vehicle.get_state()  # Use the new method from Vehicle class
+            print(state)
             action = agent.get_action(state)
-            reward = vehicle.update_from_agent(action)
-            if reward != 0:
-                run = False
-            next_state = get_state(vehicle)
-            reward += vehicle.check_off_track() + vehicle.check_speed()
+            vehicle.update_from_agent(action)
+            reward = vehicle.check_off_track() + vehicle.check_speed()
+            next_state = vehicle.get_state()  # Use the new method again
+            print(next_state)
             agent.update_q_value(state, action, round(reward, 1), next_state)
             agent.decay_exploration()
 
         vehicle.draw(environment.window)
-        draw_hud(environment, vehicle, remaining_time)
+        environment.draw_hud(vehicle, remaining_time)  # Use the new method from Environment class
         pygame.display.update()
 
     return vehicle.score, window_closed
-
-def draw_hud(environment, vehicle, remaining_time):
-    environment.draw_score(vehicle.score)
-    environment.draw_timer(remaining_time)
-    environment.draw_speed(vehicle.speed)
-    environment.draw_sensor_values(vehicle.sensors)
-    is_on_track = vehicle.check_road_status(vehicle.x, vehicle.y) != "completely_off"
-    environment.draw_vehicle_status(is_on_track, vehicle.angle)
 
 def main():
     environment = Environment()
