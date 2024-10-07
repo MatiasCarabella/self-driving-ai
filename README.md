@@ -28,7 +28,7 @@ cd self-driving-ai
 ```bash
 python main.py
 ```
-4. Let the AI agent learn through Q-learning, or control the vehicle yourself if you enabled MANUAL_CONTROL = True in the [config.py](https://github.com/MatiasCarabella/self-learning-ai.git) file
+4. Let the AI agent learn through Q-learning, or control the vehicle yourself if you enabled `MANUAL_CONTROL = True` in the [config.py](https://github.com/MatiasCarabella/self-learning-ai.git) file
 
 ## Configuration
 
@@ -39,14 +39,14 @@ The project includes a config.py file where you can adjust various parameters su
 
 ## Log Files
 
-The training results are logged in a file named training_log.txt, which records the episode number and the final score. This log can be used for performance analysis and progress visualization.
-Visualizing Progress
+The training results are logged within the `logs` folder in a file named `training_log.txt`, which records the episode number and the final score. This log can be used for performance analysis and progress visualization.
 
+## Visualizing Progress
 To visualize the agent's progress, use the grapher.py script:
 ```bash
 python grapher.py
 ```
-This will generate a graph of the scores over episodes, allowing you to see how the agent is improving.
+This will generate a graph of the scores over episodes, allowing you to see how the agent is improving over time.
 ## License
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/MatiasCarabella/self-learning-ai/blob/main/LICENSE) file for details.
 
