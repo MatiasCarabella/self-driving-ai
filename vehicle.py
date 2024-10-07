@@ -14,10 +14,10 @@ class Vehicle:
         """Initialize the vehicle with position, size, speed, and sensors."""
         self.x = x
         self.y = y
-        self.angle = initial_angle
+        self.angle = self.normalize_angle(initial_angle)
         self.initial_x = x  # Store initial position
         self.initial_y = y  # Store initial position
-        self.initial_angle = initial_angle  # Store initial angle
+        self.initial_angle = self.angle
         self.width = VEHICLE_CONFIG["WIDTH"]
         self.height = VEHICLE_CONFIG["HEIGHT"]
         self.speed = 0  # Initial speed
@@ -60,6 +60,14 @@ class Vehicle:
         # Draw sensors
         for sensor in self.sensors:
             sensor.draw(window)
+
+    def normalize_angle(self, angle):
+        """Normalize the angle to be between 0 and 360 degrees."""
+        return angle % 360
+
+    def update_angle(self, delta):
+        """Update the angle, ensuring it stays between 0 and 360 degrees."""
+        self.angle = self.normalize_angle(self.angle + delta)
 
     def update_manual(self):
         """Update the vehicle based on manual control. Return the collision penalty."""
@@ -106,20 +114,22 @@ class Vehicle:
         else:
             self.speed *= self.desacceleration  # Natural deceleration
 
-        # Handle rotation
+        # Handle rotation (modified)
+        rotation = 0
         if keys[pygame.K_LEFT]:
-            self.angle += self.rotation_speed * (self.speed / self.max_speed)
+            rotation = self.rotation_speed * (self.speed / self.max_speed)
         if keys[pygame.K_RIGHT]:
-            self.angle -= self.rotation_speed * (self.speed / self.max_speed)
+            rotation = -self.rotation_speed * (self.speed / self.max_speed)
+        self.update_angle(rotation)
 
     def handle_agent_action(self, action):
         """Interpret the agent's action."""
         if action == 0:  # Accelerate
             self.speed = min(self.speed + self.acceleration, self.max_speed)
         elif action == 1:  # Turn left
-            self.angle += self.rotation_speed * (self.speed / self.max_speed)
+            self.update_angle(self.rotation_speed * (self.speed / self.max_speed))
         elif action == 2:  # Turn right
-            self.angle -= self.rotation_speed * (self.speed / self.max_speed)
+            self.update_angle(-self.rotation_speed * (self.speed / self.max_speed))
         elif action == 3:  # Do nothing
             self.speed *= self.desacceleration
 
@@ -277,7 +287,7 @@ class Vehicle:
                 reward = 2
             elif self.speed >= 3:  # Medium reward for speed >= 3
                 reward = 1.5
-            elif self.speed > 1:  # Default reward for speed > 1
+            elif self.speed >= 1:  # Default reward for speed > 1
                 reward = 1
             else:  # Penalize for no speed
                 reward = -0.5
