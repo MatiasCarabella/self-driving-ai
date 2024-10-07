@@ -257,7 +257,7 @@ class Vehicle:
             
             if road_status != "on_road":
                 # Determine penalty based on how far off the road the vehicle is
-                penalty = -1 if road_status == "partially_off" else -2  # -1 for partial off, -2 for total
+                penalty = -0.5 if road_status == "partially_off" else -1  # -0.5 for partial off, -1 for total
                 self.update_score(penalty)  # Update score with penalty
                 self.last_penalty_time = current_time  # Update the last penalty time
                 return penalty  # Return the penalty
@@ -266,16 +266,24 @@ class Vehicle:
     def check_speed(self):
         """Check the vehicle's speed and return a reward proportional to the speed, with delay."""
         current_time = time.time()
-        
+
         # Check if enough time has passed since the last speed check
         if current_time - self.last_speed_check_time >= 0.25:
             self.last_speed_check_time = current_time  # Update last speed check time
+
+            reward = 0
             
-            if self.speed > 1:  # If speed is above 1
-                self.update_score(0.1)  # Increment score for moving
-                return 0.1  # Return a reward for moving
-            else:
-                self.update_score(-0.5)  # Penalize for not moving
-                return -0.5  # Return penalty for no speed
-        
+            if self.speed >= 6:  # Highest reward for speed >= 6
+                reward = 2
+            elif self.speed >= 3:  # Medium reward for speed >= 3
+                reward = 1.5
+            elif self.speed > 1:  # Default reward for speed > 1
+                reward = 1
+            else:  # Penalize for no speed
+                reward = -0.5
+
+            self.update_score(reward)  # Update the vehicle's score based on the reward
+            return reward  # Return the reward
+
         return 0  # If not enough time has passed, return 0 as reward
+

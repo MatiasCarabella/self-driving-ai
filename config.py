@@ -1,6 +1,6 @@
 # Session parameters
 SESSION_CONFIG = {
-    "MANUAL_CONTROL": False,  # Allows controlling the vehicle with the arrow keys
+    "MANUAL_CONTROL": True,  # Allows controlling the vehicle with the arrow keys
     "NUM_EPISODES": 100,  # Number of episodes
     "EPISODE_DURATION": 15  # Duration of each episode in seconds
 }
@@ -28,8 +28,8 @@ QL_CONFIG = {
     "LEARNING_RATE": 0.1,  # Alpha: learning rate for Q-learning updates
     "DISCOUNT_FACTOR": 0.95,  # Gamma: how much to discount future rewards
     "EXPLORATION_RATE": 1.0,  # Epsilon: initial exploration rate
-    "EXPLORATION_DECAY": 0.996,  # How fast to decay epsilon over episodes
-    "MIN_EXPLORATION_RATE": 0.1  # Minimum exploration rate (to always explore a little)
+    "EXPLORATION_DECAY": 0.995,  # How fast to decay epsilon over episodes
+    "MIN_EXPLORATION_RATE": 0.05  # Minimum exploration rate (to always explore a little)
 }
 
 # Colors used in the environment

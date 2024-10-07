@@ -17,7 +17,7 @@ if start_position is None:
 vehicle = Vehicle(start_position[0], start_position[1], start_position[2])
 
 # Initialize the Q-learning agent
-state_size = 5  # Assuming there are 5 sensors
+state_size = 8  # on track + speed + angle + 5 sensors
 action_size = 4  # The actions are: accelerate, turn left, turn right, do nothing
 agent = QLearningAgent(state_size, action_size)
 
@@ -78,12 +78,18 @@ def main():
                     collision = True  # Mark as a collision if the reward is non-zero
                 
                 # Check additional rewards and penalties
-                vehicle.check_checkpoint(current_time, checkpoints)  # Reward for checkpoints
+                # vehicle.check_checkpoint(current_time, checkpoints)  # Reward for checkpoints
                 vehicle.check_off_track()  # Penalty for going off the track
                 vehicle.check_speed()  # Reward based on speed
             else:
-                # Get the discrete state of the vehicle (e.g., sensor distances)
-                state = tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)  # Convert distances to discrete state
+                # Get the discrete state of the vehicle (e.g., on track, speed, angle, sensor distances)
+                road_status = vehicle.check_road_status(vehicle.x, vehicle.y)  # Get the current road status
+                state = (
+                    1 if road_status != "completely_off" else 0,  # On track (1) or not (0)
+                    int(vehicle.speed),  # Current vehicle speed
+                    int(vehicle.angle),  # Vehicle angle
+                ) + tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)  # Sensor distances
+                print(state);
                 
                 # Choose an action using the agent
                 action = agent.get_action(state)
@@ -94,10 +100,16 @@ def main():
                     collision = True  # Mark as a collision if the reward is non-zero
 
                 # Get the next state after the action
-                next_state = tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)
+                road_status = vehicle.check_road_status(vehicle.x, vehicle.y)  # Get the current road status
+                next_state = (
+                    1 if road_status != "completely_off" else 0,  # On track (1) or not (0)
+                    int(vehicle.speed),  # Current vehicle speed
+                    int(vehicle.angle),  # Vehicle angle
+                ) + tuple(int(sensor.distance / 10) for sensor in vehicle.sensors)  # Sensor distances
+                print(next_state);
 
                 # Check additional rewards and penalties
-                reward += vehicle.check_checkpoint(current_time, checkpoints)  # Reward for checkpoints
+                # reward += vehicle.check_checkpoint(current_time, checkpoints)  # Reward for checkpoints
                 reward += vehicle.check_off_track()  # Penalty for going off the track
                 reward += vehicle.check_speed()  # Reward based on speed
 
@@ -119,6 +131,13 @@ def main():
             environment.draw_timer(remaining_time)  # Show the remaining time
             environment.draw_speed(vehicle.speed)  # Show the vehicle speed
             environment.draw_sensor_values(vehicle.sensors)  # Show the sensor values
+
+            # Get the on-track status and vehicle angle for HUD
+            is_on_track = vehicle.check_road_status(vehicle.x, vehicle.y) != "completely_off"
+            vehicle_angle = vehicle.angle
+
+            # Draw vehicle status
+            environment.draw_vehicle_status(is_on_track, vehicle_angle)
 
             # Update the display
             pygame.display.update()

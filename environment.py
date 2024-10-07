@@ -105,3 +105,28 @@ class Environment:
             pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (text_rect.left - 5, text_rect.top - 5,
                                                             text_rect.width + 10, text_rect.height + 10))
             self.window.blit(text_surface, text_rect)
+
+    def draw_vehicle_status(self, is_on_track, vehicle_angle):
+        """Draw the vehicle's on-track status and current angle in the bottom-right corner."""
+        status_text = "On Track: " + ("Yes" if is_on_track else "No")
+        angle_text = f"Angle: {vehicle_angle:.1f}°"
+
+        base_x = self.SCREEN_WIDTH - 10  # Position from the right
+        base_y = self.SCREEN_HEIGHT - 178  # Positioned above the sensor info
+
+        # Draw the on-track status
+        status_surface = self.FONT_SMALL.render(status_text, True, self.TEXT_COLOR)
+        status_rect = status_surface.get_rect()
+        status_rect.bottomright = (base_x, base_y)
+        pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (status_rect.left - 5, status_rect.top - 5,
+                                                            status_rect.width + 10, status_rect.height + 10))
+        self.window.blit(status_surface, status_rect)
+
+        # Draw the vehicle angle
+        angle_surface = self.FONT_SMALL.render(angle_text, True, self.TEXT_COLOR)
+        angle_rect = angle_surface.get_rect()
+        angle_rect.bottomright = (base_x, base_y + 20)  # Position below the status text
+        pygame.draw.rect(self.window, self.TEXTBOX_COLOR, (angle_rect.left - 5, angle_rect.top - 5,
+                                                            angle_rect.width + 10, angle_rect.height + 10))
+        self.window.blit(angle_surface, angle_rect)
+
