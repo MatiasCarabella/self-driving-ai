@@ -32,12 +32,12 @@ def run_episode(environment, vehicle, agent, manual_control):
 
         if manual_control:
             vehicle.update_manual()
-            vehicle.check_off_track() + vehicle.check_speed()
+            vehicle.calculate_reward()
         else:
             state = vehicle.get_state()
             action = agent.get_action(state)
             vehicle.update_from_agent(action)
-            reward = vehicle.check_off_track() + vehicle.check_speed()
+            reward = vehicle.calculate_reward()
             next_state = vehicle.get_state()
             agent.update_q_value(state, action, round(reward, 1), next_state)
             agent.decay_exploration()

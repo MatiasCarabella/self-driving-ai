@@ -44,7 +44,7 @@ class Vehicle:
         ]  # List of sensors (rays) with distances
         self.score = 0  # Initial score
         self.last_checkpoint = None  # Last checkpoint crossed
-        self.last_penalty_time = time.time()  # Time of last penalty
+        self.last_road_check_time = time.time()  # Time of last penalty
         self.last_speed_check_time = time.time()  # Time of last speed check
 
     def reset(self):
@@ -55,7 +55,8 @@ class Vehicle:
         self.speed = 0  # Reset initial speed
         self.score = 0  # Reset score
         self.last_checkpoint = None  # Reset last checkpoint crossed
-        self.last_penalty_time = time.time()  # Reset penalty time
+        self.last_road_check_time = time.time()  # Reset penalty time
+        self.last_speed_check_time = time.time()  # Time of last speed check
 
     def draw(self, window):
         """Draw the vehicle and its sensors."""
@@ -254,43 +255,82 @@ class Vehicle:
                                 return 10  # Return the reward for crossing a new checkpoint
         return 0  # No checkpoint crossed, return 0
 
-    def check_off_track(self):
-        """Check if the vehicle is off the circuit and return the penalty."""
+    def reward_road(self):
+        """Evaluate the vehicle's road status and update the reward based on its position relative to the track.
+        Returns:
+            float: The reward for staying on the road or the penalty for going off the track. 
+                Returns 0 if no reward/penalty is applicable.
+        """
         current_time = time.time()
-        if current_time - self.last_penalty_time >= 0.25:  # Delay of 0.25 seconds
-            road_status = self.check_road_status(self.x, self.y)
+        
+        # Ensure enough time has passed since the last road status check
+        if current_time - self.last_road_check_time >= 0.25:  # Delay of 0.25 seconds
+            road_status = self.check_road_status(self.x, self.y)  # Determine the current road status
             
-            if road_status != "on_road":
-                # Determine penalty based on how far off the road the vehicle is
-                penalty = -0.5 if road_status == "partially_off" else -1  # -0.5 for partial off, -1 for total
-                self.update_score(penalty)  # Update score with penalty
-                self.last_penalty_time = current_time  # Update the last penalty time
-                return penalty  # Return the penalty
-        return 0  # No penalty if on road or not enough time has passed
+            if road_status == "on_road":
+                # Reward for staying on the road
+                self.update_score(0.5)  # Update the score with a small reward
+                self.last_road_check_time = current_time  # Record the time of the last road status update
+                return 0.5  # Return the small reward for being on the road
+                
+            else:
+                # Apply a penalty based on how far off the road the vehicle is
+                reward = -0.5 if road_status == "partially_off" else -1  # Assign penalty based on status
+                self.update_score(reward)  # Update the score with the determined penalty
+                self.last_road_check_time = current_time  # Record the time of the last road status update
+                return reward  # Return the calculated penalty
 
-    def check_speed(self):
-        """Check the vehicle's speed and return a reward proportional to the speed, with delay."""
+        return 0  # No reward or penalty if on the road or insufficient time has passed
+
+
+    def reward_speed(self):
+        """Evaluate the vehicle's speed and return a reward based on the speed, with a delay to stabilize feedback.
+        Returns:
+            float: The reward for the vehicle's speed, or 0 if no reward is applicable due to insufficient time.
+        """
         current_time = time.time()
 
-        # Check if enough time has passed since the last speed check
+        # Ensure enough time has passed since the last speed check
         if current_time - self.last_speed_check_time >= 0.25:
-            self.last_speed_check_time = current_time  # Update last speed check time
+            self.last_speed_check_time = current_time  # Update the time of the last speed check
 
+            # Initialize the reward variable
             reward = 0
             
+            # Determine the reward based on the vehicle's current speed
             if self.speed >= 6:  # Highest reward for speed >= 6
                 reward = 9
             elif self.speed >= 3:  # Medium reward for speed >= 3
                 reward = 3
             elif self.speed >= 1.5:  # Default reward for speed > 1.5
-                reward = 2
-            elif self.speed >= 0.5:  # No reward for speed > 0.5
-                reward = 0
-            else:  # Penalize for no speed (below 0.5)
+                reward = 1
+            elif self.speed >= 0.1:  # Low reward for speed > 0.1
+                reward = 0.5
+            else:  # Penalize for no speed (below 0.1)
                 reward = -1
 
-            self.update_score(reward)  # Update the vehicle's score based on the reward
-            return reward  # Return the reward
+            self.update_score(reward)  # Update the vehicle's score based on the calculated reward
+            return reward  # Return the calculated reward
 
-        return 0  # If not enough time has passed, return 0 as reward
+        return 0  # Return 0 if not enough time has passed since the last speed check
+    
+    def calculate_reward(self):
+        """Calculate the total reward for the vehicle based on its road status and speed.
+        Returns:
+            float: The total reward based on road status and speed.
+        """
+        # Initialize the total reward
+        total_reward = 0.0
+
+        # Reward based on road status
+        road_reward = self.reward_road()
+        total_reward += road_reward  # Add road status reward to total
+
+        # Reward based on speed
+        speed_reward = self.reward_speed()
+        total_reward += speed_reward  # Add speed reward to total
+
+        return total_reward  # Return the combined total reward
+
+
 
