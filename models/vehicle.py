@@ -70,12 +70,10 @@ class Vehicle:
 
     def get_state(self):
         """Get the current state of the vehicle."""
-        road_status = self.check_road_status(self.x, self.y)
         return (
-            # 1 if road_status != "completely_off" else 0,
             int(self.speed),
-            # int(self.angle),
-        ) + tuple(int(sensor.distance / 10) for sensor in self.sensors)
+            self.discretize_angle(self.angle),
+        ) + tuple(int(sensor.distance / 20) for sensor in self.sensors)
 
     def normalize_angle(self, angle):
         """Normalize the angle to be between 0 and 360 degrees."""
@@ -84,6 +82,10 @@ class Vehicle:
     def update_angle(self, delta):
         """Update the angle, ensuring it stays between 0 and 360 degrees."""
         self.angle = self.normalize_angle(self.angle + delta)
+
+    def discretize_angle(self, angle):
+        """Discretize the angle to 8 sectors."""
+        return int(angle // 45)  # 8 sectores de 45 grados
 
     def update_manual(self):
         """Update the vehicle based on manual control."""

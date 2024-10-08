@@ -35,6 +35,7 @@ def run_episode(environment, vehicle, agent, manual_control):
             vehicle.calculate_reward()
         else:
             state = vehicle.get_state()
+            print(state)
             action = agent.get_action(state)
             vehicle.update_from_agent(action)
             reward = vehicle.calculate_reward()
