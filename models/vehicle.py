@@ -1,10 +1,16 @@
+import sys 
+import os
+
+# Add the parent directory to the path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pygame
 import math
 import time
-from sensor import Sensor
-from checkpoint import Checkpoint
-from environment import Environment
-from config import VEHICLE_CONFIG, COLOR_CONFIG
+from models.sensor import Sensor
+from models.checkpoint import Checkpoint
+from models.environment import Environment
+from config import VEHICLE_CONFIG
 
 environment = Environment()
 

@@ -1,9 +1,9 @@
 import pygame
-from vehicle import Vehicle
-from environment import Environment
 from config import SESSION_CONFIG
+from models.vehicle import Vehicle
+from models.environment import Environment
 from machine_learning.q_learning.agent import QLearningAgent
-from logger import Logger
+from logs.logger import Logger
 
 def run_episode(environment, vehicle, agent, manual_control):
     start_ticks = pygame.time.get_ticks()

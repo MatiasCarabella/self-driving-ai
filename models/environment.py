@@ -32,8 +32,8 @@ class Environment:
         pygame.display.set_caption("Self Driving AI")
 
         # Get the absolute path of the directory where the .py file is running
-        current_directory = os.path.dirname(os.path.abspath(__file__))
-        circuit_image_path = os.path.join(current_directory, "assets/images/circuit.png")
+        parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        circuit_image_path = os.path.join(parent_directory, "assets/images/circuit.png")
 
         # Load the circuit image from the relative path
         self.CIRCUIT_IMAGE = pygame.image.load(circuit_image_path).convert()
