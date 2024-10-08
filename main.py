@@ -1,22 +1,9 @@
 import pygame
-import pickle
 from vehicle import Vehicle
 from environment import Environment
 from config import SESSION_CONFIG
-from q_learning_agent import QLearningAgent
+from machine_learning.q_learning.agent import QLearningAgent
 from logger import Logger
-
-def load_q_table():
-    try:
-        with open("q_table.pkl", "rb") as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        print("No previous Q-table found. Starting from scratch.")
-        return None
-
-def save_q_table(q_table):
-    with open("q_table.pkl", "wb") as f:
-        pickle.dump(q_table, f)
 
 def run_episode(environment, vehicle, agent, manual_control):
     start_ticks = pygame.time.get_ticks()
@@ -47,16 +34,16 @@ def run_episode(environment, vehicle, agent, manual_control):
             vehicle.update_manual()
             vehicle.check_off_track() + vehicle.check_speed()
         else:
-            state = vehicle.get_state()  # Use the new method from Vehicle class
+            state = vehicle.get_state()
             action = agent.get_action(state)
             vehicle.update_from_agent(action)
             reward = vehicle.check_off_track() + vehicle.check_speed()
-            next_state = vehicle.get_state()  # Use the new method again
+            next_state = vehicle.get_state()
             agent.update_q_value(state, action, round(reward, 1), next_state)
             agent.decay_exploration()
 
         vehicle.draw(environment.window)
-        environment.draw_hud(vehicle, remaining_time)  # Use the new method from Environment class
+        environment.draw_hud(vehicle, remaining_time)
         pygame.display.update()
 
     return vehicle.score, window_closed
@@ -70,7 +57,7 @@ def main():
     vehicle = Vehicle(*start_position)
     state_size, action_size = 6, 4
     agent = QLearningAgent(state_size, action_size)
-    agent.q_table = load_q_table() or agent.q_table
+    agent.load_q_table()  # Cargar la Q-table si existe
 
     logger = Logger()
     num_episodes = 1 if SESSION_CONFIG["MANUAL_CONTROL"] else SESSION_CONFIG["NUM_EPISODES"]
@@ -85,7 +72,7 @@ def main():
             break
 
         if not SESSION_CONFIG["MANUAL_CONTROL"]:
-            save_q_table(agent.q_table)
+            agent.save_q_table()  # Guardar la Q-table después de cada episodio
         print(f"Episode {episode + 1} completed. Final score: {score}")
         logger.log_score(score)
 
