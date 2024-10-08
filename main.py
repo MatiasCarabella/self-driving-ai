@@ -35,13 +35,15 @@ def run_episode(environment, vehicle, agent, manual_control):
             vehicle.calculate_reward()
         else:
             state = vehicle.get_state()
-            print(state)
             action = agent.get_action(state)
             vehicle.update_from_agent(action)
             reward = vehicle.calculate_reward()
             next_state = vehicle.get_state()
             agent.update_q_value(state, action, round(reward, 1), next_state)
             agent.decay_exploration()
+
+        if vehicle.collided:
+            run = False
 
         vehicle.draw(environment.window)
         environment.draw_hud(vehicle, remaining_time)
@@ -56,7 +58,7 @@ def main():
         raise ValueError("No starting point found on the circuit.")
 
     vehicle = Vehicle(*start_position)
-    state_size, action_size = 6, 4
+    state_size, action_size = 7, 4
     agent = QLearningAgent(state_size, action_size)
     agent.load_q_table()  # Cargar la Q-table si existe
 

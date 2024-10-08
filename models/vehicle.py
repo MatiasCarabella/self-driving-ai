@@ -43,6 +43,7 @@ class Vehicle:
             Sensor(self, 90, 150)
         ]  # List of sensors (rays) with distances
         self.score = 0  # Initial score
+        self.collided = False
         self.last_checkpoint = None  # Last checkpoint crossed
         self.last_road_check_time = time.time()  # Time of last penalty
         self.last_speed_check_time = time.time()  # Time of last speed check
@@ -54,6 +55,7 @@ class Vehicle:
         self.angle = self.initial_angle  # Reset initial angle
         self.speed = 0  # Reset initial speed
         self.score = 0  # Reset score
+        self.collided = False
         self.last_checkpoint = None  # Reset last checkpoint crossed
         self.last_road_check_time = time.time()  # Reset penalty time
         self.last_speed_check_time = time.time()  # Time of last speed check
@@ -92,12 +94,14 @@ class Vehicle:
         self.handle_input()
         self.update_position()
         self.update_sensors()
+        self.check_collision(VEHICLE_CONFIG["COLLISION_TYPE"])
 
     def update_from_agent(self, action):
         """Update the vehicle based on the agent's action."""
         self.handle_agent_action(action)
         self.update_position()
         self.update_sensors()
+        self.check_collision(VEHICLE_CONFIG["COLLISION_TYPE"])
 
     def handle_input(self):
         """Handle user input and update speed and angle."""
@@ -132,16 +136,10 @@ class Vehicle:
             self.speed *= self.desacceleration
 
     def update_position(self):
-        """Update the vehicle's position based on its speed and angle.
-        Return True if the vehicle collides with the window boundaries, False otherwise."""
+        """Update the vehicle's position based on its speed and angle."""
         rad_angle = math.radians(self.angle)
         new_x = self.x + self.speed * math.cos(rad_angle)
         new_y = self.y - self.speed * math.sin(rad_angle)
-
-        # Check if the vehicle collides with the window boundaries
-        if new_x < self.width / 2 or new_x > environment.SCREEN_WIDTH - self.width / 2 or \
-        new_y < self.height / 2 or new_y > environment.SCREEN_HEIGHT - self.height / 2:
-            return True  # Indicate that the vehicle collided with the window boundaries
 
         # Check vehicle's road status
         road_status = self.check_road_status(new_x, new_y)
@@ -163,8 +161,21 @@ class Vehicle:
                 self.speed *= self.desacceleration  # Keep speed within limits
             self.x = new_x
             self.y = new_y
-
-        return False  # No collision with boundaries
+    
+    def check_collision(self, check_type="WINDOW"):
+        """Check for collisions based on the specified type.
+        Parameters:
+            check_type (str): Determines the type of collision check. 
+                              "WINDOW" checks collision with window boundaries.
+                              "CIRCUIT" checks collision with the circuit using sensors."""
+        if check_type == "WINDOW":
+            # Check if the vehicle collides with the window boundaries
+            if self.x < self.width / 2 or self.x > environment.SCREEN_WIDTH - self.width / 2 or \
+               self.y < self.height / 2 or self.y > environment.SCREEN_HEIGHT - self.height / 2:
+                self.collided = True
+        elif check_type == "CIRCUIT":
+            # Check if the vehicle is completely off the road
+            self.collided = self.check_road_status(self.x, self.y) != "on_road"
 
     def check_road_status(self, x, y):
         """Determine if the vehicle is on the road, partially off, or completely off."""
@@ -246,14 +257,12 @@ class Vehicle:
                                 if checkpoint.is_active(current_time):
                                     checkpoint.last_crossed = current_time
                                     self.last_checkpoint = position  # Update last crossed checkpoint
-                                    self.update_score(10)  # Increase score for crossing a checkpoint
                                     return 10  # Return the reward for crossing the checkpoint
                             else:
                                 # New checkpoint detected
                                 checkpoints[position] = Checkpoint(position)
                                 checkpoints[position].last_crossed = current_time
                                 self.last_checkpoint = position  # Save the new checkpoint crossed
-                                self.update_score(10)  # Increase score for crossing a new checkpoint
                                 return 10  # Return the reward for crossing a new checkpoint
         return 0  # No checkpoint crossed, return 0
 
@@ -271,14 +280,12 @@ class Vehicle:
             
             if road_status == "on_road":
                 # Reward for staying on the road
-                self.update_score(0.5)  # Update the score with a small reward
                 self.last_road_check_time = current_time  # Record the time of the last road status update
                 return 0.5  # Return the small reward for being on the road
                 
             else:
                 # Apply a penalty based on how far off the road the vehicle is
                 reward = -0.5 if road_status == "partially_off" else -1  # Assign penalty based on status
-                self.update_score(reward)  # Update the score with the determined penalty
                 self.last_road_check_time = current_time  # Record the time of the last road status update
                 return reward  # Return the calculated penalty
 
@@ -311,7 +318,6 @@ class Vehicle:
             else:  # Penalize for no speed (below 0.1)
                 reward = -1
 
-            self.update_score(reward)  # Update the vehicle's score based on the calculated reward
             return reward  # Return the calculated reward
 
         return 0  # Return 0 if not enough time has passed since the last speed check
@@ -332,7 +338,12 @@ class Vehicle:
         speed_reward = self.reward_speed()
         total_reward += speed_reward  # Add speed reward to total
 
-        return total_reward  # Return the combined total reward
+        # Reward based on collision
+        if self.collided:
+            total_reward -= 50
+
+        self.update_score(total_reward) # Update the vehicle's score based on the calculated reward
+        return round(total_reward, 1)  # Return the combined total reward
 
 
 

@@ -27,7 +27,9 @@ class QLearningAgent:
         return np.zeros(self.action_size)
 
     def get_action(self, state):
-        """Select an action using epsilon-greedy policy."""
+        if len(state) != self.state_size:
+            print(f"Advertencia: El estado tiene {len(state)} variables, pero state_size es {self.state_size}")
+        
         if random.uniform(0, 1) < self.exploration_rate:
             return random.randint(0, self.action_size - 1)
         else:
