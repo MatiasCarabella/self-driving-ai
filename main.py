@@ -31,12 +31,12 @@ def run_episode(environment, vehicle, agent, manual_control):
         environment.draw_circuit()
 
         if manual_control:
-            vehicle.update_manual()
+            vehicle.handle_manual_input()
             vehicle.calculate_reward()
         else:
             state = vehicle.get_state()
             action = agent.get_action(state)
-            vehicle.update_from_agent(action)
+            vehicle.handle_agent_action(action)
             reward = vehicle.calculate_reward()
             next_state = vehicle.get_state()
             agent.update_q_value(state, action, round(reward, 1), next_state)
@@ -53,12 +53,9 @@ def run_episode(environment, vehicle, agent, manual_control):
 
 def main():
     environment = Environment()
-    start_position = environment.find_start_position()
-    if start_position is None:
-        raise ValueError("No starting point found on the circuit.")
+    vehicle = Vehicle(environment)
 
-    vehicle = Vehicle(*start_position)
-    state_size, action_size = 7, 4
+    state_size, action_size = 6, 4
     agent = QLearningAgent(state_size, action_size)
     agent.load_q_table()  # Cargar la Q-table si existe
 

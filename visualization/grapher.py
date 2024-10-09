@@ -27,36 +27,51 @@ class Grapher:
 
     def plot_progress(self):
         """
-        Plot the agent's progress (scores) over episodes.
-        This method creates a line plot of scores vs. episode numbers.
+        Plot the agent's progress (scores) over episodes with improved readability.
+        This method creates a line plot of scores vs. episode numbers, including a moving average.
         """
-        plt.figure(figsize=(10, 6))
-        plt.plot(self.episodes, self.scores, marker='o', linestyle='-', color='b')
-        plt.title("Agent progress (Score) over Episode number")
-        plt.xlabel("Episode Number")
-        plt.ylabel("Final Score")
-        plt.axhline(0, color='red', linestyle='--', label='Score 0')  # Horizontal line at 0
-        plt.legend()
-        plt.grid()
+        plt.figure(figsize=(12, 8))
 
-        # Dynamic ticks for X axis
-        num_data_points = len(self.episodes)
-        num_ticks_x = min(15, max(5, num_data_points // 10))
-        x_min, x_max = self.round_to_nearest_five(min(self.episodes)), self.round_to_nearest_five(max(self.episodes))
-        tick_spacing_x = max(1, self.round_to_nearest_five((x_max - x_min) / num_ticks_x))
-        x_ticks = range(x_min, x_max + 1, tick_spacing_x)
-        plt.xticks(x_ticks)
+        # Plot raw data with reduced opacity
+        plt.plot(self.episodes, self.scores, color='lightblue', alpha=0.3, label='Raw scores')
 
-        # Dynamic ticks for Y axis
-        y_min, y_max = self.round_to_nearest_five(min(self.scores)), self.round_to_nearest_five(max(self.scores))
-        if y_min == y_max:
-            y_min -= 5
-            y_max += 5
-        num_ticks_y = min(10, max(5, (y_max - y_min) // 10))
-        tick_spacing_y = max(1, self.round_to_nearest_five((y_max - y_min) / num_ticks_y))
-        y_ticks = np.arange(y_min, y_max + tick_spacing_y, tick_spacing_y)
-        plt.yticks(y_ticks)
+        # Calculate and plot moving average
+        window_size = min(100, len(self.scores) // 20)  # Adjust window size based on data length
+        moving_avg = np.convolve(self.scores, np.ones(window_size)/window_size, mode='valid')
+        plt.plot(self.episodes[window_size-1:], moving_avg, color='blue', label=f'Moving average (window: {window_size})')
 
+        # Add min and max score lines
+        min_score = min(self.scores)
+        max_score = max(self.scores)
+        plt.axhline(min_score, color='red', linestyle='--', label=f'Min score: {min_score:.2f}')
+        plt.axhline(max_score, color='green', linestyle='--', label=f'Max score: {max_score:.2f}')
+        plt.axhline(0, color='gray', linestyle=':', label='Score 0')
+
+        # Improve labels and title
+        plt.title("Agent Progress: Score over Episodes", fontsize=16)
+        plt.xlabel("Episode Number", fontsize=12)
+        plt.ylabel("Score", fontsize=12)
+
+        # Adjust x-axis ticks
+        num_ticks = 10
+        step = max(1, len(self.episodes) // num_ticks)
+        plt.xticks(range(0, len(self.episodes), step))
+
+        # Add grid for better readability
+        plt.grid(True, linestyle=':', alpha=0.6)
+
+        # Add legend
+        plt.legend(loc='upper left', fontsize=10)
+
+        # Add text box with statistics
+        stats_text = f"Total Episodes: {len(self.episodes)}\n"
+        stats_text += f"Final Score: {self.scores[-1]:.2f}\n"
+        stats_text += f"Avg Score (last 100): {np.mean(self.scores[-100:]):.2f}"
+        plt.text(0.02, 0.02, stats_text, transform=plt.gca().transAxes, 
+                bbox=dict(facecolor='white', alpha=0.8), fontsize=10, 
+                verticalalignment='bottom')
+
+        plt.tight_layout()
         plt.show()
 
     def plot_exploration_rate_decay(self, target_epsilon, exploration_decay, initial_rate=1.0, extension_factor=1.2):

@@ -33,7 +33,7 @@ class Environment:
 
         # Get the absolute path of the directory where the .py file is running
         parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        circuit_image_path = os.path.join(parent_directory, "assets/images/circuit.png")
+        circuit_image_path = os.path.join(parent_directory, "assets/images/circuit_2.png")
 
         # Load the circuit image from the relative path
         self.CIRCUIT_IMAGE = pygame.image.load(circuit_image_path).convert()

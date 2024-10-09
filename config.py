@@ -1,7 +1,7 @@
 # Session parameters
 SESSION_CONFIG = {
     "MANUAL_CONTROL": False,  # Allows controlling the vehicle with the arrow keys
-    "NUM_EPISODES": 100,  # Number of episodes
+    "NUM_EPISODES": 10000,  # Number of episodes
     "EPISODE_DURATION": 15  # Duration of each episode in seconds
 }
 
