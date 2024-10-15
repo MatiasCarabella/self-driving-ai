@@ -1,3 +1,10 @@
 __pycache__
-q_table.pkl
-training_log.txt
+
+# Ignore contents of q_tables folder
+machine_learning/q_learning/q_tables/*
+# Ignore contents of q_learning logs folder
+logs/q_learning/*
+
+# But don't ignore .gitkeep files in these directories
+!machine_learning/q_learning/q_tables/.gitkeep
+!logs/q_learning/.gitkeep
