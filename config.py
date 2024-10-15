@@ -1,7 +1,7 @@
 # Session parameters
 SESSION_CONFIG = {
     "MANUAL_CONTROL": False,  # Allows controlling the vehicle with the arrow keys
-    "NUM_EPISODES": 500,  # Number of episodes
+    "NUM_EPISODES": 50,  # Number of episodes
     "EPISODE_DURATION": 20,  # Duration of each episode in seconds,
     "LEARNING_MODE": True  # True: El agente aprende y guarda la Q-table, False: solo ejecuta
 }
@@ -13,7 +13,7 @@ QL_CONFIG = {
     "EXPLORATION_RATE": 1.0,  # Epsilon: initial exploration rate
     "EXPLORATION_DECAY": 0.995,  # How fast to decay epsilon over episodes
     "MIN_EXPLORATION_RATE": 0.05,  # Minimum exploration rate (to always explore a little)
-    "Q_TABLE_FILENAME": "v2.pkl"  # Agent 'knowledge' filename
+    "Q_TABLE_FILENAME": "v1.pkl"  # Agent 'knowledge' filename
 }
 
 # Vehicle parameters

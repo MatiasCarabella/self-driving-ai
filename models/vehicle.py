@@ -10,7 +10,7 @@ class Vehicle:
         self.environment = environment
         start_info = self.environment.find_start_position()
         if start_info is None:
-            raise ValueError("No se pudo encontrar una posición inicial válida en el circuito.")
+            raise ValueError("Could not find a valid starting position on the circuit.")
         
         self.initial_position = (start_info[0], start_info[1])
         self.initial_angle = self.normalize_angle(start_info[2])
@@ -30,6 +30,7 @@ class Vehicle:
         self.reset()
 
     def reset(self):
+        """Reset the vehicle to its initial state."""
         self.x, self.y = self.initial_position
         self.angle = self.initial_angle
         self.speed = 0
@@ -40,11 +41,13 @@ class Vehicle:
         self.last_speed_check_time = time.time()
 
     def _create_image(self):
+        """Create the vehicle's image."""
         image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         image.fill(self.environment.VEHICLE_COLOR)
         return image
 
     def _create_sensors(self):
+        """Create the vehicle's sensors."""
         return [
             Sensor(self, -90, 100),
             Sensor(self, -45, 150),
@@ -54,6 +57,7 @@ class Vehicle:
         ]
 
     def draw(self, window):
+        """Draw the vehicle and its sensors on the window."""
         rotated_image = pygame.transform.rotate(self.image, self.angle)
         new_rect = rotated_image.get_rect(center=(self.x, self.y))
         window.blit(rotated_image, new_rect.topleft)
@@ -61,22 +65,27 @@ class Vehicle:
             sensor.draw(window)
 
     def get_state(self):
+        """Get the current state of the vehicle."""
         return (
             int(self.speed),
         ) + tuple(int(sensor.distance / 10) for sensor in self.sensors)
 
     @staticmethod
     def normalize_angle(angle):
+        """Normalize the angle to be between 0 and 359."""
         return angle % 360
 
     def update_angle(self, delta):
+        """Update the vehicle's angle."""
         self.angle = self.normalize_angle(self.angle + delta)
 
     @staticmethod
     def discretize_angle(angle):
+        """Discretize the angle into 8 directions."""
         return int(angle // 45)
 
     def handle_manual_input(self):
+        """Handle manual input for the vehicle."""
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
             self.accelerate()
@@ -91,6 +100,7 @@ class Vehicle:
         self.update()
 
     def handle_agent_action(self, action):
+        """Handle agent's action for the vehicle."""
         if action == 0:
             self.accelerate()
         elif action == 1:
@@ -103,20 +113,25 @@ class Vehicle:
         self.update()
 
     def update(self):
+        """Update the vehicle's state."""
         self.update_position()
         self.update_sensors()
         self.check_collision(VEHICLE_CONFIG["COLLISION_TYPE"])
 
     def accelerate(self):
+        """Accelerate the vehicle."""
         self.speed = min(self.speed + self.acceleration, self.max_speed)
 
     def decelerate(self):
+        """Decelerate the vehicle."""
         self.speed *= self.deceleration
 
     def rotate(self, rotation):
+        """Rotate the vehicle."""
         self.update_angle(rotation * (self.speed / self.max_speed))
 
     def update_position(self):
+        """Update the vehicle's position based on its speed and angle."""
         rad_angle = math.radians(self.angle)
         new_x = self.x + self.speed * math.cos(rad_angle)
         new_y = self.y - self.speed * math.sin(rad_angle)
@@ -125,6 +140,7 @@ class Vehicle:
         self.adjust_speed_and_position(road_status, new_x, new_y)
 
     def adjust_speed_and_position(self, road_status, new_x, new_y):
+        """Adjust the vehicle's speed and position based on its road status."""
         if road_status == "on_road":
             self.max_speed = VEHICLE_CONFIG["MAX_SPEED"]
         elif road_status == "partially_off":
@@ -136,6 +152,7 @@ class Vehicle:
         self.x, self.y = new_x, new_y
 
     def check_collision(self, check_type="WINDOW"):
+        """Check if the vehicle has collided with the boundaries."""
         if check_type == "WINDOW":
             self.collided = not (self.width / 2 < self.x < self.environment.SCREEN_WIDTH - self.width / 2 and
                                  self.height / 2 < self.y < self.environment.SCREEN_HEIGHT - self.height / 2)
@@ -143,6 +160,7 @@ class Vehicle:
             self.collided = self.check_road_status(self.x, self.y) != "on_road"
 
     def check_road_status(self, x, y):
+        """Check the road status at the given position."""
         rotated_rect = self.get_rotated_vertices(pygame.Rect(x - self.width / 2, y - self.height / 2, self.width, self.height))
         on_road_count = sum(1 for vertex in rotated_rect if self.is_on_road(*vertex))
         
@@ -153,6 +171,7 @@ class Vehicle:
         return "completely_off"
 
     def get_rotated_vertices(self, rect):
+        """Get the rotated vertices of the vehicle's rectangle."""
         rad_angle = math.radians(self.angle)
         cx, cy = rect.center
         corners = [rect.topleft, rect.topright, rect.bottomright, rect.bottomleft]
@@ -161,19 +180,23 @@ class Vehicle:
                 for x, y in corners]
 
     def is_on_road(self, x, y):
+        """Check if the given position is on the road."""
         if 0 <= x < self.environment.SCREEN_WIDTH and 0 <= y < self.environment.SCREEN_HEIGHT:
             color_at_position = self.environment.CIRCUIT_IMAGE.get_at((int(x), int(y)))
             return color_at_position in [self.environment.ROAD_COLOR, self.environment.CHECKPOINT_COLOR, self.environment.START_COLOR]
         return False
 
     def update_sensors(self):
+        """Update the vehicle's sensors."""
         for sensor in self.sensors:
             sensor.update(self.environment)
 
     def update_score(self, delta):
+        """Update the vehicle's score."""
         self.score = round(self.score + delta, 1)
 
     def check_checkpoint(self, current_time, checkpoints):
+        """Check if the vehicle has reached a checkpoint."""
         radius = 2
         for dx in range(-radius, radius + 1):
             for dy in range(-radius, radius + 1):
@@ -200,9 +223,11 @@ class Vehicle:
         return 0
 
     def is_valid_position(self, x, y):
+        """Check if the given position is within the screen boundaries."""
         return 0 <= x < self.environment.SCREEN_WIDTH and 0 <= y < self.environment.SCREEN_HEIGHT
 
     def reward_road(self):
+        """Calculate the reward based on the vehicle's position on the road."""
         current_time = time.time()
         if current_time - self.last_road_check_time >= 0.25:
             road_status = self.check_road_status(self.x, self.y)
@@ -213,25 +238,26 @@ class Vehicle:
             return -0.5 if road_status == "partially_off" else -1
         return 0
 
-    def reward_speed(self):        
+    def reward_speed(self):
+        """Calculate the reward based on the vehicle's speed."""
         return round(self.speed / 6, 1)
     
     def reward_distance(self):
         """
-        Recompensa al agente por mantener distancia con los bordes de la pista.
-        Se enfoca en los sensores laterales (índices 0, 1, 3, 4).
+        Reward the agent for maintaining distance from the track edges.
+        Focuses on lateral sensors (indices 0, 1, 3, 4).
         """
         lateral_sensors = [self.sensors[i] for i in [0, 1, 3, 4]]
         min_distance = min(sensor.distance for sensor in lateral_sensors)
         
-        # Normalizar la distancia mínima (asumiendo que 50 es la distancia máxima del sensor lateral)
+        # Normalize the minimum distance (assuming 50 is the maximum distance for lateral sensors)
         reward = min_distance / 100
         
-        # Calcular la recompensa        
+        # Calculate the reward        
         return round(reward, 1)
 
     def calculate_reward(self):
-        # road_reward = self.reward_road()
+        """Calculate the total reward for the vehicle's current state."""
         total_reward = 0
         total_reward += round(self.reward_speed() * self.reward_distance(), 1)
         
