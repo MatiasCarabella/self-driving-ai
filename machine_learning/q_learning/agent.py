@@ -15,7 +15,7 @@ class QLearningAgent:
         self.state_size = state_size  # The number of possible states
         self.action_size = action_size  # The number of possible actions
         self.q_table = defaultdict(self._default_q_values)  # Initialize Q-table with default values for unseen states
-        self.q_table_path = os.path.join("machine_learning", "q_learning", "q_table.pkl")
+        self.q_table_path = os.path.join("machine_learning", "q_learning", "q_tables", QL_CONFIG["Q_TABLE_FILENAME"])
         self.learning_rate = QL_CONFIG["LEARNING_RATE"]  # Alpha
         self.discount_factor = QL_CONFIG["DISCOUNT_FACTOR"]  # Gamma
         self.exploration_rate = QL_CONFIG["EXPLORATION_RATE"]  # Epsilon
