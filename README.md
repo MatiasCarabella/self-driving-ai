@@ -19,7 +19,6 @@ To run this project, you will need to have Python 3.x installed along with the P
 pip install pygame
 ```
 
-## Usage
 1. Clone the repository to your local machine:
 ```bash
 git clone https://github.com/matiascarabella/self-driving-ai.git
@@ -30,13 +29,52 @@ git clone https://github.com/matiascarabella/self-driving-ai.git
 cd self-driving-ai
 ```
 
-3. Run the simulation:
+## Usage
+
+
+1. Run the simulation:
 ```bash
 python main.py
 ```
 
-4. Let the AI agent learn through Q-learning  
+2. Let the AI agent learn through Q-learning  
    <sup>Or control the vehicle yourself by setting `MANUAL_CONTROL = True` in the config.py file</sup>
+
+## Project Structure
+```
+self-driving-ai/
+├── assets
+│   └── images
+│       ├── circuit_1.png
+│       ├── circuit_2.png
+│       └── circuit_3.png
+├── logs
+│   ├── q_learning
+│   │   ├── .gitkeep
+│   │   └── v1.txt
+│   └── logger.py
+├── machine_learning
+│   └── q_learning
+│       ├── q_tables
+│       │   ├── .gitkeep
+│       │   └── v1.pkl
+│       └── agent.py
+├── models
+│   ├── checkpoint.py
+│   ├── environment.py
+│   ├── sensor.py
+│   └── vehicle.py
+├── visualization
+│   ├── q_learning
+│   │   └── plot_exploration_rate_decay.py
+│   ├── grapher.py
+│   └── plot_progress.py
+├── .gitignore
+├── config.py
+├── LICENSE
+├── main.py
+└── README.md
+```
 
 ## Configuration
 The project includes a `config.py` file where you can adjust various parameters:
