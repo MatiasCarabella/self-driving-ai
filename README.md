@@ -13,24 +13,22 @@ This project is a 2D self-driving car simulation developed in Python using Pygam
 - **Logging**: Tracks the performance of the agent across episodes and stores it for further analysis.
 - **Dual Mode Operation**: Supports both training and simulation modes through the LEARNING_MODE configuration.
 
-## Installation
-To run this project, you will need to have Python 3.x installed along with the Pygame library. You can install the required libraries using pip:
+## Setup Instructions
+
+### Prerequisites
+To run this project, you'll need Python 3.x along with the Pygame library. You can install the required libraries using pip:
 ```bash
 pip install pygame
 ```
+### Installation
 
-1. Clone the repository to your local machine:
+1. Clone the repository:
 ```bash
 git clone https://github.com/matiascarabella/self-driving-ai.git
-```
-
-2. Navigate to the project directory:
-```bash
 cd self-driving-ai
 ```
 
 ## Usage
-
 
 1. Run the simulation:
 ```bash
@@ -43,29 +41,29 @@ python main.py
 ## Project Structure
 ```
 self-driving-ai/
-├── assets
-│   └── images
+├── assets/
+│   └── images/
 │       ├── circuit_1.png
 │       ├── circuit_2.png
 │       └── circuit_3.png
-├── logs
-│   ├── q_learning
+├── logs/
+│   ├── q_learning/
 │   │   ├── .gitkeep
 │   │   └── v1.txt
 │   └── logger.py
-├── machine_learning
-│   └── q_learning
-│       ├── q_tables
+├── machine_learning/
+│   └── q_learning/
+│       ├── q_tables/
 │       │   ├── .gitkeep
 │       │   └── v1.pkl
 │       └── agent.py
-├── models
+├── models/
 │   ├── checkpoint.py
 │   ├── environment.py
 │   ├── sensor.py
 │   └── vehicle.py
-├── visualization
-│   ├── q_learning
+├── visualization/
+│   ├── q_learning/
 │   │   └── plot_exploration_rate_decay.py
 │   ├── grapher.py
 │   └── plot_progress.py
