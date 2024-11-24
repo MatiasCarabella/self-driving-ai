@@ -49,12 +49,12 @@ def run_episode(environment, vehicle, agent, manual_control):
         else:
             state = vehicle.get_state()
             # Use epsilon-greedy only in learning mode
-            action = agent.get_action(state, use_epsilon=SESSION_CONFIG["LEARNING_MODE"])
+            action = agent.get_action(state, use_epsilon=SESSION_CONFIG["TRAINING_MODE"])
             vehicle.handle_agent_action(action)
             reward = vehicle.calculate_reward()
             next_state = vehicle.get_state()
 
-            if SESSION_CONFIG["LEARNING_MODE"]:
+            if SESSION_CONFIG["TRAINING_MODE"]:
                 agent.update_q_value(state, action, round(reward, 1), next_state)
                 agent.decay_exploration()
 
@@ -77,7 +77,7 @@ def main():
     agent = QLearningAgent(state_size, action_size)
 
     # Load Q-table based on mode
-    if SESSION_CONFIG["LEARNING_MODE"]:
+    if SESSION_CONFIG["TRAINING_MODE"]:
         if agent.load_q_table():
             print(f"Training mode: Q-table loaded from {agent.q_table_path}")
         else:
@@ -107,12 +107,12 @@ def main():
             print("Window closed. Ending session.")
             break
 
-        # Save Q-table and log score only in learning mode
-        if not SESSION_CONFIG["MANUAL_CONTROL"] and SESSION_CONFIG["LEARNING_MODE"]:
+        # Save Q-table and log score only in training mode
+        if not SESSION_CONFIG["MANUAL_CONTROL"] and SESSION_CONFIG["TRAINING_MODE"]:
             agent.save_q_table()
             logger.log_score(score)
 
-        mode = "Training" if SESSION_CONFIG["LEARNING_MODE"] else "Evaluation"
+        mode = "Training" if SESSION_CONFIG["TRAINING_MODE"] else "Evaluation"
         print(f"{mode} episode {episode + 1} completed. Score: {score}")
 
     pygame.quit()
