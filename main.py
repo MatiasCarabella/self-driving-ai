@@ -48,12 +48,13 @@ def run_episode(environment, vehicle, agent, manual_control):
             vehicle.calculate_reward()
         else:
             state = vehicle.get_state()
-            action = agent.get_action(state)
+            # Use epsilon-greedy only in learning mode
+            action = agent.get_action(state, use_epsilon=SESSION_CONFIG["LEARNING_MODE"])
             vehicle.handle_agent_action(action)
             reward = vehicle.calculate_reward()
             next_state = vehicle.get_state()
 
-            if SESSION_CONFIG["LEARNING_MODE"]:  # Only update Q-values if in learning mode
+            if SESSION_CONFIG["LEARNING_MODE"]:
                 agent.update_q_value(state, action, round(reward, 1), next_state)
                 agent.decay_exploration()
 
@@ -74,11 +75,23 @@ def main():
     vehicle = Vehicle(environment)
     state_size, action_size = 6, 4
     agent = QLearningAgent(state_size, action_size)
-    agent.load_q_table()  # Load the Q-table if it exists
 
-    # Get the Q-table filename directly from the agent's 'q_table_path' attribute
-    q_table_filename = os.path.basename(agent.q_table_path)  # Extract only the filename (e.g., "v1.pkl")
-    log_filename = q_table_filename.replace(".pkl", ".txt")  # Change the extension to ".txt"
+    # Load Q-table based on mode
+    if SESSION_CONFIG["LEARNING_MODE"]:
+        if agent.load_q_table():
+            print(f"Training mode: Q-table loaded from {agent.q_table_path}")
+        else:
+            print("Training mode: No previous Q-table found. Starting fresh.")
+    else:
+        if agent.load_q_table():
+            print(f"Evaluation mode: Using saved Q-table from {agent.q_table_path}")
+        else:
+            print("Warning: No Q-table found for evaluation mode!")
+            return
+
+    # Setup logging
+    q_table_filename = os.path.basename(agent.q_table_path)
+    log_filename = q_table_filename.replace(".pkl", ".txt")
     logger = Logger(os.path.join("q_learning", log_filename))
 
     num_episodes = 1 if SESSION_CONFIG["MANUAL_CONTROL"] else SESSION_CONFIG["NUM_EPISODES"]
@@ -86,18 +99,21 @@ def main():
     for episode in range(num_episodes):
         print(f"Starting episode {episode + 1}/{num_episodes}")
         vehicle.reset()
-        score, window_closed = run_episode(environment, vehicle, agent, SESSION_CONFIG["MANUAL_CONTROL"])
+        score, window_closed = run_episode(
+            environment, vehicle, agent, SESSION_CONFIG["MANUAL_CONTROL"]
+        )
 
         if window_closed:
-            print("Window closed. Ending training session.")
+            print("Window closed. Ending session.")
             break
 
-        # Save the Q-table and log the progress only if in learning mode
+        # Save Q-table and log score only in learning mode
         if not SESSION_CONFIG["MANUAL_CONTROL"] and SESSION_CONFIG["LEARNING_MODE"]:
             agent.save_q_table()
             logger.log_score(score)
 
-        print(f"Episode {episode + 1} completed. Final score: {score}")
+        mode = "Training" if SESSION_CONFIG["LEARNING_MODE"] else "Evaluation"
+        print(f"{mode} episode {episode + 1} completed. Score: {score}")
 
     pygame.quit()
 

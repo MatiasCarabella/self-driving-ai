@@ -3,7 +3,7 @@ SESSION_CONFIG = {
     "MANUAL_CONTROL": False,  # Allows controlling the vehicle with the arrow keys
     "NUM_EPISODES": 50,  # Number of episodes
     "EPISODE_DURATION": 20,  # Duration of each episode in seconds,
-    "LEARNING_MODE": True  # True: El agente aprende y guarda la Q-table, False: solo ejecuta
+    "LEARNING_MODE": True  # True: The AI agent explores, learns and updates its knowledge base, False: The AI agent only applies its existing knowledge.
 }
 
 # Q-learning agent parameters
