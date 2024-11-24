@@ -73,14 +73,14 @@ SESSION_CONFIG = {
 The training results are logged within the `logs` folder in a file named `v1.txt`, which records the episode number and the final score. This log can be used for performance analysis and progress visualization.
 
 ## Visualizing Progress
-To visualize the agent's progress, use the grapher.py script:
+To visualize the agent's progress, use the `visualization/plot_progress.py` script:
 ```bash
-python grapher.py
+python visualization/plot_progress.py
 ```
 
 This will generate a graph of the scores over episodes, allowing you to see how the agent is improving over time:
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/8f31ab34-a9e3-42d2-8e1b-ec9e521d315c" />
+  <img src="https://github.com/user-attachments/assets/3dd718fe-2712-4cbc-8b63-2d82a52b8cf6" />
 </p>
 
 ## License
