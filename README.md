@@ -80,7 +80,7 @@ python visualization/plot_progress.py
 
 This will generate a graph of the scores over episodes, allowing you to see how the agent is improving over time:
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/3dd718fe-2712-4cbc-8b63-2d82a52b8cf6" />
+  <img src="https://github.com/user-attachments/assets/f8bc373f-3271-44d0-b3a3-5409cae49b68" />
 </p>
 
 ## License
