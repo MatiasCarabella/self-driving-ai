@@ -47,22 +47,22 @@ SESSION_CONFIG = {
     "MANUAL_CONTROL": False,  # Enable manual control with arrow keys
     "NUM_EPISODES": 50,       # Number of episodes to run
     "EPISODE_DURATION": 20,   # Duration of each episode in seconds
-    "LEARNING_MODE": True     # Toggle between training and simulation modes
+    "TRAINING_MODE": True     # Toggle between training and evaluation modes
 }
 ```
 
-#### Learning Modes
-- **Training Mode** (`LEARNING_MODE = True`):
+#### Agent Modes
+- **Training Mode** (`TRAINING_MODE = True`):
+  - Used for training the agent
   - Agent explores new actions using epsilon-greedy strategy
   - Updates Q-table based on experiences
   - Behavior varies between runs due to exploration
-  - Best for training the agent
 
-- **Simulation Mode** (`LEARNING_MODE = False`):
+- **Evaluation Mode** (`TRAINING_MODE = False`):
+  - Used for testing or demonstrating learned behavior
   - Agent uses learned knowledge deterministically
   - No Q-table updates or exploration
   - Consistent behavior between runs
-  - Best for testing or demonstrating learned behavior
 
 ### Other Configuration Options
 - Vehicle settings (dimensions, speed, acceleration)
