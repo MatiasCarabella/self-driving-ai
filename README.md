@@ -54,7 +54,7 @@ This will generate a graph of the scores over episodes, allowing you to see how 
 </p>
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/MatiasCarabella/self-learning-ai/blob/main/LICENSE) file for details.
+This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 - OpenAI for inspiring the use of AI and reinforcement learning concepts.
