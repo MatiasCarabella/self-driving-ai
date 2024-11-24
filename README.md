@@ -44,10 +44,10 @@ The project includes a `config.py` file where you can adjust various parameters:
 ### Session Configuration
 ```python
 SESSION_CONFIG = {
-    "TRAINING_MODE": True,     # Toggle between training and evaluation modes
+    "TRAINING_MODE": True,    # Toggle between training and evaluation modes
     "NUM_EPISODES": 50,       # Number of episodes to run
     "EPISODE_DURATION": 20,   # Duration of each episode in seconds
-    "MANUAL_CONTROL": False  # Enable manual control with arrow keys
+    "MANUAL_CONTROL": False   # Enable manual control with arrow keys
 }
 ```
 
