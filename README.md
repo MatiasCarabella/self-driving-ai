@@ -1,16 +1,20 @@
-# 2D Self-Driving Car Simulation
+<h1 align="center">2D Self-Driving Car Simulation</h1>
 
-This project is a 2D self-driving car simulation developed in Python using Pygame. It features a Q-learning agent that learns to navigate a circuit by interacting with its environment and optimizing its actions through a reward system. This simulation serves as an educational tool for understanding reinforcement learning concepts and their practical applications in autonomous driving technology.
+This project is a 2D self-driving car simulation developed in Python using Pygame. It features a Q-learning agent that learns to navigate a circuit by interacting with its environment and optimizing its actions through a reward system. 
+
+<p align="center">
+  <img src="https://i.imgur.com/XMouIzG.gif" alt="Self-Driving AI gif">
+</p>
 
 ## Features
 - **Reinforcement Learning**: Implements Q-learning to train an AI agent to navigate a circuit.
 - **Sensor System**: The vehicle is equipped with sensors that provide information about its surroundings, allowing for informed decision-making.
 - **Visual Feedback**: Real-time visualization of the vehicle's performance, including speed, scores, and sensor values.
 - **Logging**: Tracks the performance of the agent across episodes and stores it for further analysis.
+- **Dual Mode Operation**: Supports both training and simulation modes through the LEARNING_MODE configuration.
 
 ## Installation
 To run this project, you will need to have Python 3.x installed along with the Pygame library. You can install the required libraries using pip:
-
 ```bash
 pip install pygame
 ```
@@ -20,34 +24,60 @@ pip install pygame
 ```bash
 git clone https://github.com/matiascarabella/self-driving-ai.git
 ```
+
 2. Navigate to the project directory:
 ```bash
 cd self-driving-ai
 ```
-3. Run the simulation
+
+3. Run the simulation:
 ```bash
 python main.py
 ```
-4. Let the AI agent learn through Q-learning
 
-    <sup>Or control the vehicle yourself if you enabled `MANUAL_CONTROL = True` in the [config.py](https://github.com/MatiasCarabella/self-learning-ai.git) file<sup>
+4. Let the AI agent learn through Q-learning  
+   <sup>Or control the vehicle yourself by setting `MANUAL_CONTROL = True` in the config.py file</sup>
 
 ## Configuration
+The project includes a `config.py` file where you can adjust various parameters:
 
-The project includes a config.py file where you can adjust various parameters such as:
+### Session Configuration
+```python
+SESSION_CONFIG = {
+    "MANUAL_CONTROL": False,  # Enable manual control with arrow keys
+    "NUM_EPISODES": 50,       # Number of episodes to run
+    "EPISODE_DURATION": 20,   # Duration of each episode in seconds
+    "LEARNING_MODE": True     # Toggle between training and simulation modes
+}
+```
+
+#### Learning Modes
+- **Training Mode** (`LEARNING_MODE = True`):
+  - Agent explores new actions using epsilon-greedy strategy
+  - Updates Q-table based on experiences
+  - Behavior varies between runs due to exploration
+  - Best for training the agent
+
+- **Simulation Mode** (`LEARNING_MODE = False`):
+  - Agent uses learned knowledge deterministically
+  - No Q-table updates or exploration
+  - Consistent behavior between runs
+  - Best for testing or demonstrating learned behavior
+
+### Other Configuration Options
 - Vehicle settings (dimensions, speed, acceleration)
-- Q-learning agent parameters (learning rate, discount factor, exploration rate)
-- Session parameters (number of episodes, duration)
+- Q-learning parameters (learning rate, discount factor, exploration rate)
+- Window and display settings
 
 ## Log Files
-
-The training results are logged within the `logs` folder in a file named `training_log.txt`, which records the episode number and the final score. This log can be used for performance analysis and progress visualization.
+The training results are logged within the `logs` folder in a file named `v1.txt`, which records the episode number and the final score. This log can be used for performance analysis and progress visualization.
 
 ## Visualizing Progress
 To visualize the agent's progress, use the grapher.py script:
 ```bash
 python grapher.py
 ```
+
 This will generate a graph of the scores over episodes, allowing you to see how the agent is improving over time:
 <p align="center">
   <img src="https://github.com/user-attachments/assets/8f31ab34-a9e3-42d2-8e1b-ec9e521d315c" />
