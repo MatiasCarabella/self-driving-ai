@@ -77,8 +77,7 @@ To visualize the agent's progress, use the `visualization/plot_progress.py` scri
 ```bash
 python visualization/plot_progress.py
 ```
-
-This will generate a graph of the scores over episodes, allowing you to see how the agent is improving over time:
+This will generate a graph of scores across episodes, highlighting the 100-episode moving average to illustrate the agent's improvement over time.
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f8bc373f-3271-44d0-b3a3-5409cae49b68" />
 </p>
