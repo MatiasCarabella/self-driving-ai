@@ -16,9 +16,9 @@ This project is a 2D self-driving car simulation developed in Python using Pygam
 ## Setup Instructions
 
 ### Prerequisites
-To run this project, you'll need Python 3.x along with the Pygame library. You can install the required libraries using pip:
+To run this project, you'll need Python 3.x along with the Pygame and numpy libraries. You can install the required libraries using pip:
 ```bash
-pip install pygame
+pip install pygame numpy
 ```
 ### Installation
 
@@ -32,7 +32,7 @@ cd self-driving-ai
 
 1. Run the simulation:
 ```bash
-python3 main.py
+python main.py
 ```
 
 2. Let the AI agent learn through Q-learning  
