@@ -1,4 +1,14 @@
-<h1 align="center">2D Self-Driving Car Simulation</h1>
+<div id="user-content-toc">
+  <ul align="center" style="list-style: none;">
+    <summary>
+      <h1>2D Self-Driving Car Simulation</h1>
+    </summary>
+  </ul>
+</div>
+<div align="center">
+   <a href="https://www.python.org/" target="_blank"><img src="https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=fff" alt="Python" /></a>
+</div>
+<h1></h1>
 
 This project is a 2D self-driving car simulation developed in Python using Pygame. It features a Q-learning agent that learns to navigate a circuit by interacting with its environment and optimizing its actions through a reward system. 
 
