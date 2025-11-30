@@ -3,7 +3,7 @@ import time
 import pygame
 from models.sensor import Sensor
 from models.checkpoint import Checkpoint
-from config import VEHICLE_CONFIG
+from config import VEHICLE_CONFIG, REWARD_CONFIG
 
 class Vehicle:
     def __init__(self, environment):
@@ -36,9 +36,13 @@ class Vehicle:
         self.speed = 0
         self.score = 0
         self.collided = False
+        self.finished = False  # Track if finish line reached
         self.last_checkpoint = None
         self.last_road_check_time = time.time()
         self.last_speed_check_time = time.time()
+        self.checkpoints = {}  # Track checkpoints for rewards
+        self.last_position = (self.x, self.y)  # Track position for forward progress
+        self.total_distance = 0  # Track total distance traveled
 
     def _create_image(self):
         """Create the vehicle's image."""
@@ -58,17 +62,25 @@ class Vehicle:
 
     def draw(self, window):
         """Draw the vehicle and its sensors on the window."""
-        rotated_image = pygame.transform.rotate(self.image, self.angle)
-        new_rect = rotated_image.get_rect(center=(self.x, self.y))
-        window.blit(rotated_image, new_rect.topleft)
-        for sensor in self.sensors:
-            sensor.draw(window)
+        if window is not None:
+            rotated_image = pygame.transform.rotate(self.image, self.angle)
+            new_rect = rotated_image.get_rect(center=(self.x, self.y))
+            window.blit(rotated_image, new_rect.topleft)
+            for sensor in self.sensors:
+                sensor.draw(window)
 
     def get_state(self):
-        """Get the current state of the vehicle."""
-        return (
-            int(self.speed),
-        ) + tuple(int(sensor.distance / 10) for sensor in self.sensors)
+        """Get the current state of the vehicle based on speed and sensor readings."""
+        from config import QL_CONFIG
+        
+        # Discretize speed (0-6)
+        speed_discrete = int(self.speed)
+        
+        # Discretize sensor distances using config value
+        discretization = QL_CONFIG["SENSOR_DISCRETIZATION"]
+        sensor_distances = tuple(int(sensor.distance / discretization) for sensor in self.sensors)
+        
+        return (speed_discrete,) + sensor_distances
 
     @staticmethod
     def normalize_angle(angle):
@@ -78,11 +90,6 @@ class Vehicle:
     def update_angle(self, delta):
         """Update the vehicle's angle."""
         self.angle = self.normalize_angle(self.angle + delta)
-
-    @staticmethod
-    def discretize_angle(angle):
-        """Discretize the angle into 8 directions."""
-        return int(angle // 45)
 
     def handle_manual_input(self):
         """Handle manual input for the vehicle."""
@@ -183,7 +190,8 @@ class Vehicle:
         """Check if the given position is on the road."""
         if 0 <= x < self.environment.SCREEN_WIDTH and 0 <= y < self.environment.SCREEN_HEIGHT:
             color_at_position = self.environment.CIRCUIT_IMAGE.get_at((int(x), int(y)))
-            return color_at_position in [self.environment.ROAD_COLOR, self.environment.CHECKPOINT_COLOR, self.environment.START_COLOR]
+            return color_at_position in [self.environment.ROAD_COLOR, self.environment.CHECKPOINT_COLOR, 
+                                        self.environment.START_COLOR, self.environment.FINISH_LINE_COLOR]
         return False
 
     def update_sensors(self):
@@ -226,6 +234,25 @@ class Vehicle:
         """Check if the given position is within the screen boundaries."""
         return 0 <= x < self.environment.SCREEN_WIDTH and 0 <= y < self.environment.SCREEN_HEIGHT
 
+    def check_finish_line(self):
+        """Check if the vehicle has reached the finish line."""
+        def is_finish_color(color):
+            """Check if color matches finish line (with tolerance)."""
+            r, g, b = color[:3]
+            # Check for #00A2E8 (0, 162, 232) with some tolerance
+            return abs(r - 0) < 20 and abs(g - 162) < 20 and abs(b - 232) < 20
+        
+        radius = 3
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                if dx * dx + dy * dy <= radius * radius:
+                    check_x, check_y = int(self.x + dx), int(self.y + dy)
+                    if self.is_valid_position(check_x, check_y):
+                        color_at_position = self.environment.CIRCUIT_IMAGE.get_at((check_x, check_y))
+                        if is_finish_color(color_at_position):
+                            return True
+        return False
+
     def reward_road(self):
         """Calculate the reward based on the vehicle's position on the road."""
         current_time = time.time()
@@ -234,13 +261,17 @@ class Vehicle:
             self.last_road_check_time = current_time
             
             if road_status == "on_road":
-                return 0.5
-            return -0.5 if road_status == "partially_off" else -1
+                return REWARD_CONFIG["ON_ROAD_REWARD"]
+            elif road_status == "partially_off":
+                return REWARD_CONFIG["PARTIALLY_OFF_PENALTY"]
+            else:
+                return REWARD_CONFIG["COMPLETELY_OFF_PENALTY"]
         return 0
 
     def reward_speed(self):
         """Calculate the reward based on the vehicle's speed."""
-        return round(self.speed / 6, 1)
+        normalized_speed = self.speed / self.max_speed
+        return round(normalized_speed * REWARD_CONFIG["SPEED_WEIGHT"], 1)
     
     def reward_distance(self):
         """
@@ -250,19 +281,52 @@ class Vehicle:
         lateral_sensors = [self.sensors[i] for i in [0, 1, 3, 4]]
         min_distance = min(sensor.distance for sensor in lateral_sensors)
         
-        # Normalize the minimum distance (assuming 50 is the maximum distance for lateral sensors)
-        reward = min_distance / 100
+        # Normalize the minimum distance
+        normalized_distance = min_distance / 100
         
         # Calculate the reward        
-        return round(reward, 1)
+        return round(normalized_distance * REWARD_CONFIG["DISTANCE_WEIGHT"], 1)
+    
+    def reward_forward_progress(self):
+        """Reward the agent for making forward progress."""
+        current_pos = (self.x, self.y)
+        distance_moved = math.sqrt(
+            (current_pos[0] - self.last_position[0]) ** 2 + 
+            (current_pos[1] - self.last_position[1]) ** 2
+        )
+        self.last_position = current_pos
+        self.total_distance += distance_moved
+        
+        # Reward based on distance moved
+        return round(distance_moved * REWARD_CONFIG["FORWARD_PROGRESS_WEIGHT"], 1)
 
     def calculate_reward(self):
         """Calculate the total reward for the vehicle's current state."""
         total_reward = 0
+        
+        # Check for finish line first
+        if self.check_finish_line() and not self.finished:
+            self.finished = True
+            total_reward += REWARD_CONFIG["FINISH_LINE_REWARD"]
+            print(f"🏁 FINISH LINE REACHED! Bonus: +{REWARD_CONFIG['FINISH_LINE_REWARD']}")
+        
+        # Combine speed and distance rewards
         total_reward += round(self.reward_speed() * self.reward_distance(), 1)
         
+        # Add road status reward
+        total_reward += self.reward_road()
+        
+        # Add forward progress reward
+        total_reward += self.reward_forward_progress()
+        
+        # Check for checkpoint rewards
+        current_time = time.time()
+        checkpoint_reward = self.check_checkpoint(current_time, self.checkpoints)
+        total_reward += checkpoint_reward
+        
+        # Collision penalty
         if self.collided:
-            total_reward -= 25
+            total_reward += REWARD_CONFIG["COLLISION_PENALTY"]
 
         self.update_score(total_reward)
         return total_reward

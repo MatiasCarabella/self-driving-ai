@@ -1,4 +1,5 @@
 import os
+import json
 
 class Logger:
     def __init__(self, log_file="training_log.txt"):
@@ -10,6 +11,10 @@ class Logger:
         """
         self.log_directory = "logs"  # Define the base directory for logs
         self.log_file = os.path.join(self.log_directory, log_file)  # Construct the full path to the log file
+        
+        # Create a detailed metrics file
+        base_name = os.path.splitext(log_file)[0]
+        self.metrics_file = os.path.join(self.log_directory, f"{base_name}_metrics.json")
 
         # Ensure the log directory exists
         os.makedirs(self.log_directory, exist_ok=True)
@@ -41,3 +46,26 @@ class Logger:
         """
         with open(self.log_file, "a") as log_file:
             log_file.write(f"{score}\n")  # Write the score followed by a newline
+    
+    def log_metrics(self, episode, score, exploration_rate, collided, distance_traveled):
+        """
+        Log detailed metrics for an episode.
+
+        Args:
+            episode (int): Episode number
+            score (float): Final score
+            exploration_rate (float): Current exploration rate
+            collided (bool): Whether the vehicle collided
+            distance_traveled (float): Total distance traveled
+        """
+        metrics = {
+            "episode": episode,
+            "score": score,
+            "exploration_rate": exploration_rate,
+            "collided": collided,
+            "distance_traveled": distance_traveled
+        }
+        
+        # Append to metrics file
+        with open(self.metrics_file, "a") as f:
+            f.write(json.dumps(metrics) + "\n")

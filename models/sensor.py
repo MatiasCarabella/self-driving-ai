@@ -39,7 +39,7 @@ class Sensor:
     def _calculate_distance(self, environment):
         """
         Calculate the distance to the first obstacle the sensor detects.
-        If the vehicle is on the road, it measures the distance to a non-road object.
+        If the vehicle is on the road, it measures the distance to white walls only.
         If the vehicle is off-road, it measures the distance to the road.
         :param environment: The environment to check for obstacles
         :return: The distance to the obstacle (positive if on road, negative if off road)
@@ -55,13 +55,14 @@ class Sensor:
             if 0 <= check_x < environment.SCREEN_WIDTH and 0 <= check_y < environment.SCREEN_HEIGHT:
                 color_at_position = environment.CIRCUIT_IMAGE.get_at((check_x, check_y))
 
-                # If the vehicle is on the road, detect the first non-road object
+                # If the vehicle is on the road, detect only white walls
                 if self.is_on_road:
-                    if color_at_position not in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
+                    if color_at_position == environment.BACKGROUND_COLOR:  # Only detect white
                         return d
                 # If the vehicle is off-road, detect the distance to the road
                 else:
-                    if color_at_position in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
+                    if color_at_position in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, 
+                                            environment.START_COLOR, environment.FINISH_LINE_COLOR]:
                         return -d
 
         # If the sensor detects no obstacles, return the max length or 0 if off-road
@@ -72,14 +73,15 @@ class Sensor:
         Draw the sensor line and the detected obstacle (if any) on the window.
         :param window: The PyGame window to draw on
         """
-        # Draw the sensor line from the vehicle to the sensor's endpoint
-        pygame.draw.line(window, COLOR_CONFIG["GREEN"], (self.vehicle.x, self.vehicle.y), (self.end_x, self.end_y), 2)
-        
-        # If an obstacle was detected, draw a circle at the obstacle's location
-        if self.distance != 0:
-            obstacle_x = int(self.vehicle.x + abs(self.distance) * math.cos(math.radians(self.vehicle.angle + self.angle_offset)))
-            obstacle_y = int(self.vehicle.y - abs(self.distance) * math.sin(math.radians(self.vehicle.angle + self.angle_offset)))
+        if window is not None:
+            # Draw the sensor line from the vehicle to the sensor's endpoint
+            pygame.draw.line(window, COLOR_CONFIG["GREEN"], (self.vehicle.x, self.vehicle.y), (self.end_x, self.end_y), 2)
             
-            # Draw the obstacle in blue if on-road, red if off-road
-            color = COLOR_CONFIG["BLUE"] if self.is_on_road else COLOR_CONFIG["RED"]
-            pygame.draw.circle(window, color, (obstacle_x, obstacle_y), 5)
+            # If an obstacle was detected, draw a circle at the obstacle's location
+            if self.distance != 0:
+                obstacle_x = int(self.vehicle.x + abs(self.distance) * math.cos(math.radians(self.vehicle.angle + self.angle_offset)))
+                obstacle_y = int(self.vehicle.y - abs(self.distance) * math.sin(math.radians(self.vehicle.angle + self.angle_offset)))
+                
+                # Draw the obstacle in blue if on-road, red if off-road
+                color = COLOR_CONFIG["BLUE"] if self.is_on_road else COLOR_CONFIG["RED"]
+                pygame.draw.circle(window, color, (obstacle_x, obstacle_y), 5)

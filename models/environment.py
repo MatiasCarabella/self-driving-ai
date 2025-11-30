@@ -4,10 +4,11 @@ import math
 from config import WINDOW_CONFIG, COLOR_CONFIG, FONT_CONFIG
 
 class Environment:
-    def __init__(self):
+    def __init__(self, headless=False):
         # Attributes: Dimensions
         self.SCREEN_WIDTH = WINDOW_CONFIG["WIDTH"]
         self.SCREEN_HEIGHT = WINDOW_CONFIG["HEIGHT"]
+        self.headless = headless
 
         # Attributes: Colors
         self.ROAD_COLOR = COLOR_CONFIG["BLACK"]
@@ -16,24 +17,36 @@ class Environment:
         self.SENSOR_COLOR = COLOR_CONFIG["GREEN"]
         self.START_COLOR = COLOR_CONFIG["YELLOW"]
         self.CHECKPOINT_COLOR = COLOR_CONFIG["GRAY"]
+        self.FINISH_LINE_COLOR = COLOR_CONFIG["FINISH_LINE"]
         self.TEXT_COLOR = COLOR_CONFIG["WHITE"]
         self.TEXTBOX_COLOR = COLOR_CONFIG["BLACK"]
 
+        # Set headless mode before pygame init
+        if headless:
+            os.environ['SDL_VIDEODRIVER'] = 'dummy'
+
         # Initialize PyGame
         pygame.init()
-
-        # Font for score and timer text
-        pygame.font.init()
-        self.FONT_BIG = pygame.font.Font(None, FONT_CONFIG["BIG"])
-        self.FONT_SMALL = pygame.font.Font(None, FONT_CONFIG["SMALL"])
-
-        # Configure the PyGame window
-        self.window = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-        pygame.display.set_caption("Self Driving AI")
+        
+        if not headless:
+            # Font for score and timer text
+            pygame.font.init()
+            self.FONT_BIG = pygame.font.Font(None, FONT_CONFIG["BIG"])
+            self.FONT_SMALL = pygame.font.Font(None, FONT_CONFIG["SMALL"])
+            # Configure the PyGame window
+            self.window = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            pygame.display.set_caption("Self Driving AI")
+        else:
+            # Minimal pygame init for headless mode
+            self.window = pygame.display.set_mode((1, 1))  # Minimal dummy window
+            self.FONT_BIG = None
+            self.FONT_SMALL = None
 
         # Get the absolute path of the directory where the .py file is running
         parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        circuit_image_path = os.path.join(parent_directory, "assets/images/circuit_2.png")
+        from config import SESSION_CONFIG
+        circuit_name = SESSION_CONFIG.get("CIRCUIT", "circuit_1")
+        circuit_image_path = os.path.join(parent_directory, f"assets/images/{circuit_name}.png")
 
         # Load the circuit image from the relative path
         self.CIRCUIT_IMAGE = pygame.image.load(circuit_image_path).convert()
@@ -41,36 +54,46 @@ class Environment:
 
     def find_start_position(self):
         """Find the first pixel with the start color and determine the initial direction."""
+        def is_yellow(color):
+            """Check if color is yellow (with some tolerance for image compression)."""
+            r, g, b = color[:3]
+            return r > 200 and g > 200 and b < 50
+        
+        from config import SESSION_CONFIG, CIRCUIT_CONFIG
+        circuit_name = SESSION_CONFIG.get("CIRCUIT", "circuit_1")
+        
         for y in range(self.CIRCUIT_IMAGE.get_height()):
             for x in range(self.CIRCUIT_IMAGE.get_width()):
-                if self.CIRCUIT_IMAGE.get_at((x, y)) == self.START_COLOR:
-                    # Look for the road direction
-                    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # left, right, up, down
-                    for dx, dy in directions:
-                        nx, ny = x + dx, y + dy
-                        if 0 <= nx < self.CIRCUIT_IMAGE.get_width() and 0 <= ny < self.CIRCUIT_IMAGE.get_height():
-                            if self.CIRCUIT_IMAGE.get_at((nx, ny)) == self.ROAD_COLOR:
-                                # Calculate the initial angle
-                                angle = math.degrees(math.atan2(-dy, dx))
-                                return x, y, angle
+                pixel_color = self.CIRCUIT_IMAGE.get_at((x, y))
+                if is_yellow(pixel_color):
+                    # Get starting angle from circuit config
+                    angle = CIRCUIT_CONFIG[circuit_name]["start_angle"]
+                    print(f"Start position found at ({x}, {y}) with angle {angle}° for {circuit_name}")
+                    return x, y, angle
+        
+        print("ERROR: No yellow start pixel found!")
+        print(f"Looking for yellow color: {self.START_COLOR}")
         return None
 
     def draw_circuit(self):
         """Draw the circuit image onto the window."""
-        self.window.blit(self.CIRCUIT_IMAGE, (0, 0))
+        if not self.headless:
+            self.window.blit(self.CIRCUIT_IMAGE, (0, 0))
 
     def clear_screen(self):
         """Clear the screen with the background color."""
-        self.window.fill(self.BACKGROUND_COLOR)
+        if not self.headless:
+            self.window.fill(self.BACKGROUND_COLOR)
 
     def draw_hud(self, vehicle, remaining_time):
         """Draw the entire HUD (Head-Up Display)."""
-        self.draw_score(vehicle.score)
-        self.draw_timer(remaining_time)
-        self.draw_speed(vehicle.speed)
-        self.draw_sensor_values(vehicle.sensors)
-        is_on_track = vehicle.check_road_status(vehicle.x, vehicle.y) != "completely_off"
-        self.draw_vehicle_status(is_on_track, vehicle.angle)
+        if not self.headless:
+            self.draw_score(vehicle.score)
+            self.draw_timer(remaining_time)
+            self.draw_speed(vehicle.speed)
+            self.draw_sensor_values(vehicle.sensors)
+            is_on_track = vehicle.check_road_status(vehicle.x, vehicle.y) != "completely_off"
+            self.draw_vehicle_status(is_on_track, vehicle.angle)
 
     def draw_score(self, vehicle_score):
         """Draw the score in the top-left corner."""

@@ -26,9 +26,9 @@ This project is a 2D self-driving car simulation developed in Python using Pygam
 ## Setup Instructions
 
 ### Prerequisites
-To run this project, you'll need Python 3.x along with the Pygame and numpy libraries. You can install the required libraries using pip:
+To run this project, you'll need Python 3.x along with the required libraries. You can install them using pip:
 ```bash
-pip install pygame numpy
+pip install -r requirements.txt
 ```
 ### Installation
 
@@ -40,48 +40,75 @@ cd self-driving-ai
 
 ## Usage
 
-1. Run the simulation:
+### Standard Training (with visualization)
 ```bash
 python main.py
 ```
 
-2. Let the AI agent learn through Q-learning  
-   <sup>Or control the vehicle yourself by setting `MANUAL_CONTROL = True` in the config.py file</sup>
+### Fast Training (headless mode - 5-10x faster)
+```bash
+python train_fast.py
+```
+Runs without rendering for much faster training. Perfect for overnight training sessions.
+
+### Command Line Options
+Override config settings from the command line:
+```bash
+python main.py --circuit circuit_1 --episodes 100 --headless
+python main.py --eval                    # Evaluation mode (no training)
+python main.py --manual                  # Manual control with arrow keys
+```
+
+### Watch Trained Agent (Evaluation Mode)
+```bash
+python watch_agent.py
+```
+Watch your trained agent perform without any learning or logging. The agent uses its learned knowledge deterministically.
+
+## Improving Agent Performance
+
+If your agent gets stuck or isn't learning well:
+
+1. **Increase exploration**: Lower `MIN_EXPLORATION_RATE` in config.py
+2. **Train longer**: Use `--episodes 10000` or more
+3. **Try different circuits**: Each circuit teaches different skills
+4. **Adjust rewards**: Tune `REWARD_CONFIG` values in config.py
 
 ## Project Structure
 ```
 self-driving-ai/
 ├── assets/
 │   └── images/
-│       ├── circuit_1.png
-│       ├── circuit_2.png
-│       └── circuit_3.png
+│       ├── circuit_1.png          # Horizontal circuit (1893x493)
+│       └── circuit_2.png          # Square circuit (801x601)
 ├── logs/
 │   ├── q_learning/
-│   │   ├── .gitkeep
-│   │   └── v1.txt
-│   └── logger.py
+│   │   ├── circuit1_v1.txt        # Episode scores for circuit 1
+│   │   ├── circuit1_v1_metrics.json
+│   │   ├── circuit2_v1.txt        # Episode scores for circuit 2
+│   │   └── circuit2_v1_metrics.json
+│   └── logger.py                  # Logging utilities
 ├── machine_learning/
 │   └── q_learning/
 │       ├── q_tables/
-│       │   ├── .gitkeep
-│       │   └── v1.pkl
-│       └── agent.py
+│       │   ├── circuit1_v1.pkl    # Learned Q-table for circuit 1
+│       │   └── circuit2_v1.pkl    # Learned Q-table for circuit 2
+│       └── agent.py               # Q-learning agent implementation
 ├── models/
-│   ├── checkpoint.py
-│   ├── environment.py
-│   ├── sensor.py
-│   └── vehicle.py
+│   ├── checkpoint.py              # Checkpoint detection system
+│   ├── environment.py             # Game environment and rendering
+│   ├── sensor.py                  # Vehicle sensor system
+│   └── vehicle.py                 # Vehicle physics and state
 ├── visualization/
-│   ├── q_learning/
-│   │   └── plot_exploration_rate_decay.py
-│   ├── grapher.py
-│   └── plot_progress.py
+│   └── plot_training.py           # Training progress visualization
 ├── .gitignore
-├── config.py
+├── config.py                      # All configuration parameters
 ├── LICENSE
-├── main.py
-└── README.md
+├── main.py                        # Main entry point with CLI support
+├── README.md
+├── requirements.txt               # Python dependencies (pinned versions)
+├── train_fast.py                  # Headless training wrapper
+└── watch_agent.py                 # Evaluation mode wrapper
 ```
 
 ## Configuration
@@ -93,7 +120,26 @@ SESSION_CONFIG = {
     "TRAINING_MODE": True,    # Toggle between training and evaluation modes
     "NUM_EPISODES": 50,       # Number of episodes to run
     "EPISODE_DURATION": 20,   # Duration of each episode in seconds
-    "MANUAL_CONTROL": False   # Enable manual control with arrow keys
+    "MANUAL_CONTROL": False,  # Enable manual control with arrow keys
+    "HEADLESS": False,        # Run without rendering (5-10x faster)
+    "FRAME_SKIP": 1,          # Render every Nth frame (higher = faster)
+    "CIRCUIT": "circuit_2"    # Which circuit to use: "circuit_1" or "circuit_2"
+}
+```
+
+### Circuit Configuration
+```python
+CIRCUIT_CONFIG = {
+    "circuit_1": {
+        "window_size": (1200, 400),
+        "start_angle": 0,      # Point right
+        "q_table": "circuit1_v1.pkl"
+    },
+    "circuit_2": {
+        "window_size": (800, 600),
+        "start_angle": 180,    # Point left
+        "q_table": "circuit2_v1.pkl"
+    }
 }
 ```
 
@@ -116,14 +162,33 @@ SESSION_CONFIG = {
 - Window and display settings
 
 ## Log Files
-The training results are logged within the `logs` folder in a file named `v1.txt`, which records the episode number and the final score. This log can be used for performance analysis and progress visualization.
+The training results are logged within the `logs/q_learning/` folder:
+- `circuit1_v1.txt` / `circuit2_v1.txt`: Records the final score for each episode
+- `circuit1_v1_metrics.json` / `circuit2_v1_metrics.json`: Detailed metrics including:
+  - Episode number
+  - Score and distance traveled
+  - Exploration rate (epsilon)
+  - Collision status
+  - Finish line reached
+
+These logs can be used for performance analysis and progress visualization. Each circuit maintains separate logs.
 
 ## Visualizing Progress
-To visualize the agent's progress, use the `visualization/plot_progress.py` script:
+Visualize your agent's training progress:
+
 ```bash
-python3 visualization/plot_progress.py
+python visualization/plot_training.py
 ```
-This will generate a graph of scores across episodes, highlighting the 100-episode moving average to illustrate the agent's improvement over time.
+
+Shows distance traveled over episodes - the primary metric for learning progress. The visualization:
+- Displays raw distance data with moving average
+- Shows max distance achieved with reference line
+- Marks new records with star (★) indicators
+- Includes key statistics (episodes, peak, avg last 100)
+- Automatically merges multiple training sessions into a continuous timeline
+
+The plot automatically uses the metrics file for the current circuit in config.py.
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f8bc373f-3271-44d0-b3a3-5409cae49b68" />
 </p>
