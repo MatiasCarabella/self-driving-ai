@@ -1,3 +1,10 @@
+"""
+Configuration file for Self-Driving AI training.
+
+This file contains all hyperparameters and settings for the Q-learning agent,
+vehicle physics, reward system, and training sessions.
+"""
+
 # Session parameters
 SESSION_CONFIG = {
     "TRAINING_MODE": True,    # Toggle between training and evaluation modes
@@ -6,7 +13,21 @@ SESSION_CONFIG = {
     "MANUAL_CONTROL": False,  # Enable manual control with arrow keys
     "HEADLESS": False,        # Run without rendering (much faster training)
     "FRAME_SKIP": 1,          # Process every Nth frame (higher = faster but less smooth)
-    "PARALLEL_WORKERS": 4     # Number of parallel training workers (experimental)
+    "CIRCUIT": "circuit_2"    # Which circuit to use: "circuit_1" or "circuit_2"
+}
+
+# Circuit-specific configurations
+CIRCUIT_CONFIG = {
+    "circuit_1": {
+        "window_size": (1200, 400),
+        "start_angle": 0,  # Point right
+        "q_table": "circuit1_v1.pkl"
+    },
+    "circuit_2": {
+        "window_size": (800, 600),
+        "start_angle": 180,  # Point left
+        "q_table": "circuit2_v1.pkl"
+    }
 }
 
 # Q-learning agent parameters
@@ -16,7 +37,7 @@ QL_CONFIG = {
     "EXPLORATION_RATE": 1.0,  # Epsilon: initial exploration rate
     "EXPLORATION_DECAY": 0.998,  # How fast to decay epsilon (slower = more exploration)
     "MIN_EXPLORATION_RATE": 0.05,  # Minimum exploration rate (lower = more exploitation)
-    "Q_TABLE_FILENAME": "circuit1_v1.pkl"  # Agent 'knowledge' filename (circuit 1)
+    "SENSOR_DISCRETIZATION": 10  # Divide sensor distances by this value for state space
 }
 
 # Reward parameters
@@ -29,7 +50,7 @@ REWARD_CONFIG = {
     "PARTIALLY_OFF_PENALTY": -0.5,  # Penalty for being partially off road
     "COMPLETELY_OFF_PENALTY": -1.0,  # Penalty for being completely off road
     "COLLISION_PENALTY": -10.0,  # Penalty for collision (reduced from -25)
-    "FORWARD_PROGRESS_WEIGHT": 0.5  # Weight for forward progress reward
+    "FORWARD_PROGRESS_WEIGHT": 1.5  # Weight for forward progress reward
 }
 
 # Vehicle parameters
@@ -45,11 +66,14 @@ VEHICLE_CONFIG = {
     "COLLISION_TYPE": "CIRCUIT" # "WINDOW" or "CIRCUIT"
 }
 
-# General window configuration
-WINDOW_CONFIG = {
-    "WIDTH": 1200,
-    "HEIGHT": 400
-}
+# General window configuration (auto-set based on circuit)
+def get_window_config():
+    """Get window configuration based on selected circuit."""
+    circuit = SESSION_CONFIG.get("CIRCUIT", "circuit_1")
+    width, height = CIRCUIT_CONFIG[circuit]["window_size"]
+    return {"WIDTH": width, "HEIGHT": height}
+
+WINDOW_CONFIG = get_window_config()
 
 # Colors used in the environment
 COLOR_CONFIG = {

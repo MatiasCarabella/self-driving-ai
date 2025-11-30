@@ -70,17 +70,17 @@ class Vehicle:
                 sensor.draw(window)
 
     def get_state(self):
-        """Get the current state of the vehicle with enhanced features."""
-        # Discretize angle into 8 directions (0-7)
-        angle_discrete = self.discretize_angle(self.angle)
+        """Get the current state of the vehicle based on speed and sensor readings."""
+        from config import QL_CONFIG
         
         # Discretize speed (0-6)
         speed_discrete = int(self.speed)
         
-        # Discretize sensor distances (divide by 10 for coarser bins)
-        sensor_distances = tuple(int(sensor.distance / 10) for sensor in self.sensors)
+        # Discretize sensor distances using config value
+        discretization = QL_CONFIG["SENSOR_DISCRETIZATION"]
+        sensor_distances = tuple(int(sensor.distance / discretization) for sensor in self.sensors)
         
-        return (speed_discrete, angle_discrete) + sensor_distances
+        return (speed_discrete,) + sensor_distances
 
     @staticmethod
     def normalize_angle(angle):
@@ -90,11 +90,6 @@ class Vehicle:
     def update_angle(self, delta):
         """Update the vehicle's angle."""
         self.angle = self.normalize_angle(self.angle + delta)
-
-    @staticmethod
-    def discretize_angle(angle):
-        """Discretize the angle into 8 directions."""
-        return int(angle // 45)
 
     def handle_manual_input(self):
         """Handle manual input for the vehicle."""

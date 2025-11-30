@@ -51,56 +51,64 @@ python train_fast.py
 ```
 Runs without rendering for much faster training. Perfect for overnight training sessions.
 
+### Command Line Options
+Override config settings from the command line:
+```bash
+python main.py --circuit circuit_1 --episodes 100 --headless
+python main.py --eval                    # Evaluation mode (no training)
+python main.py --manual                  # Manual control with arrow keys
+```
+
 ### Watch Trained Agent (Evaluation Mode)
 ```bash
 python watch_agent.py
 ```
 Watch your trained agent perform without any learning or logging. The agent uses its learned knowledge deterministically.
 
-### Manual Control
-Set `MANUAL_CONTROL = True` in config.py to drive the car yourself with arrow keys.
-
 ## Improving Agent Performance
 
-If your agent gets stuck (e.g., only turns right, can't handle sharp corners):
+If your agent gets stuck or isn't learning well:
 
-```bash
-python retrain_exploration.py
-```
-
-This boosts exploration to help the agent discover new strategies. See `TRAINING_TIPS.md` for detailed strategies on improving learning.
+1. **Increase exploration**: Lower `MIN_EXPLORATION_RATE` in config.py
+2. **Train longer**: Use `--episodes 10000` or more
+3. **Try different circuits**: Each circuit teaches different skills
+4. **Adjust rewards**: Tune `REWARD_CONFIG` values in config.py
 
 ## Project Structure
 ```
 self-driving-ai/
 ├── assets/
 │   └── images/
-│       ├── circuit_1.png
-│       ├── circuit_2.png
-│       └── circuit_3.png
+│       ├── circuit_1.png          # Horizontal circuit (1893x493)
+│       └── circuit_2.png          # Square circuit (801x601)
 ├── logs/
 │   ├── q_learning/
-│   │   ├── .gitkeep
-│   │   └── v1.txt
-│   └── logger.py
+│   │   ├── circuit1_v1.txt        # Episode scores for circuit 1
+│   │   ├── circuit1_v1_metrics.json
+│   │   ├── circuit2_v1.txt        # Episode scores for circuit 2
+│   │   └── circuit2_v1_metrics.json
+│   └── logger.py                  # Logging utilities
 ├── machine_learning/
 │   └── q_learning/
 │       ├── q_tables/
-│       │   ├── .gitkeep
-│       │   └── v1.pkl
-│       └── agent.py
+│       │   ├── circuit1_v1.pkl    # Learned Q-table for circuit 1
+│       │   └── circuit2_v1.pkl    # Learned Q-table for circuit 2
+│       └── agent.py               # Q-learning agent implementation
 ├── models/
-│   ├── checkpoint.py
-│   ├── environment.py
-│   ├── sensor.py
-│   └── vehicle.py
+│   ├── checkpoint.py              # Checkpoint detection system
+│   ├── environment.py             # Game environment and rendering
+│   ├── sensor.py                  # Vehicle sensor system
+│   └── vehicle.py                 # Vehicle physics and state
 ├── visualization/
-│   └── plot_training.py
+│   └── plot_training.py           # Training progress visualization
 ├── .gitignore
-├── config.py
+├── config.py                      # All configuration parameters
 ├── LICENSE
-├── main.py
-└── README.md
+├── main.py                        # Main entry point with CLI support
+├── README.md
+├── requirements.txt               # Python dependencies (pinned versions)
+├── train_fast.py                  # Headless training wrapper
+└── watch_agent.py                 # Evaluation mode wrapper
 ```
 
 ## Configuration
@@ -114,7 +122,24 @@ SESSION_CONFIG = {
     "EPISODE_DURATION": 20,   # Duration of each episode in seconds
     "MANUAL_CONTROL": False,  # Enable manual control with arrow keys
     "HEADLESS": False,        # Run without rendering (5-10x faster)
-    "FRAME_SKIP": 1           # Render every Nth frame (higher = faster)
+    "FRAME_SKIP": 1,          # Render every Nth frame (higher = faster)
+    "CIRCUIT": "circuit_2"    # Which circuit to use: "circuit_1" or "circuit_2"
+}
+```
+
+### Circuit Configuration
+```python
+CIRCUIT_CONFIG = {
+    "circuit_1": {
+        "window_size": (1200, 400),
+        "start_angle": 0,      # Point right
+        "q_table": "circuit1_v1.pkl"
+    },
+    "circuit_2": {
+        "window_size": (800, 600),
+        "start_angle": 180,    # Point left
+        "q_table": "circuit2_v1.pkl"
+    }
 }
 ```
 
@@ -137,11 +162,16 @@ SESSION_CONFIG = {
 - Window and display settings
 
 ## Log Files
-The training results are logged within the `logs` folder:
-- `v2.txt`: Records the final score for each episode
-- `v2_metrics.json`: Detailed metrics including score, exploration rate, collision status, and distance traveled
+The training results are logged within the `logs/q_learning/` folder:
+- `circuit1_v1.txt` / `circuit2_v1.txt`: Records the final score for each episode
+- `circuit1_v1_metrics.json` / `circuit2_v1_metrics.json`: Detailed metrics including:
+  - Episode number
+  - Score and distance traveled
+  - Exploration rate (epsilon)
+  - Collision status
+  - Finish line reached
 
-These logs can be used for performance analysis and progress visualization.
+These logs can be used for performance analysis and progress visualization. Each circuit maintains separate logs.
 
 ## Visualizing Progress
 Visualize your agent's training progress:
@@ -152,58 +182,16 @@ python visualization/plot_training.py
 
 Shows distance traveled over episodes - the primary metric for learning progress. The visualization:
 - Displays raw distance data with moving average
-- Shows max distance achieved
-- Includes comprehensive statistics (last 100, last 1000, overall averages)
+- Shows max distance achieved with reference line
+- Marks new records with star (★) indicators
+- Includes key statistics (episodes, peak, avg last 100)
 - Automatically merges multiple training sessions into a continuous timeline
 
-For detailed single-metric views:
-```bash
-python visualization/plot_training.py distance  # Same as default
-python visualization/plot_training.py score     # Score-focused view
-```
+The plot automatically uses the metrics file for the current circuit in config.py.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f8bc373f-3271-44d0-b3a3-5409cae49b68" />
 </p>
-
-## Training Speed Optimization
-
-### Performance Comparison (100 episodes)
-| Mode | Time | Speedup |
-|------|------|---------|
-| Standard (with rendering) | ~35 minutes | 1x |
-| Headless mode | ~4-6 minutes | 5-10x |
-| Frame skip (skip=3) | ~12 minutes | 3x |
-
-### Recommendations
-- **Development/Testing**: Use standard mode to see what's happening
-- **Large-Scale Training**: Use headless mode (`train_fast.py`)
-- **Debugging**: Use frame skip to balance speed and visibility
-
-## Recent Improvements (v2)
-
-### Enhanced State Representation
-- Added vehicle angle to state space for better directional awareness
-- Improved state discretization for more effective learning
-
-### Improved Reward System
-- Configurable reward parameters in `config.py`
-- Reduced collision penalty for better early-stage learning
-- Added forward progress rewards
-- Integrated checkpoint system into reward calculation
-- Normalized rewards for consistent learning
-
-### Better Metrics & Logging
-- Comprehensive metrics tracking (exploration rate, collision rate, distance)
-- JSON-based detailed logging for analysis
-- New visualization script for multi-metric analysis
-- Real-time exploration rate display during training
-
-### Code Quality
-- Removed unnecessary imports and path manipulations
-- Fixed internationalization issues (Spanish comments)
-- Added `requirements.txt` for easier setup
-- Configurable reward parameters for experimentation
 
 ## License
 This project is licensed under the [MIT License](LICENSE).

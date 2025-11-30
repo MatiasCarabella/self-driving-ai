@@ -39,7 +39,7 @@ class Sensor:
     def _calculate_distance(self, environment):
         """
         Calculate the distance to the first obstacle the sensor detects.
-        If the vehicle is on the road, it measures the distance to a non-road object.
+        If the vehicle is on the road, it measures the distance to white walls only.
         If the vehicle is off-road, it measures the distance to the road.
         :param environment: The environment to check for obstacles
         :return: The distance to the obstacle (positive if on road, negative if off road)
@@ -55,13 +55,14 @@ class Sensor:
             if 0 <= check_x < environment.SCREEN_WIDTH and 0 <= check_y < environment.SCREEN_HEIGHT:
                 color_at_position = environment.CIRCUIT_IMAGE.get_at((check_x, check_y))
 
-                # If the vehicle is on the road, detect the first non-road object
+                # If the vehicle is on the road, detect only white walls
                 if self.is_on_road:
-                    if color_at_position not in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
+                    if color_at_position == environment.BACKGROUND_COLOR:  # Only detect white
                         return d
                 # If the vehicle is off-road, detect the distance to the road
                 else:
-                    if color_at_position in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, environment.START_COLOR]:
+                    if color_at_position in [environment.ROAD_COLOR, environment.CHECKPOINT_COLOR, 
+                                            environment.START_COLOR, environment.FINISH_LINE_COLOR]:
                         return -d
 
         # If the sensor detects no obstacles, return the max length or 0 if off-road

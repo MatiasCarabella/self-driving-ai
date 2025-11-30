@@ -23,7 +23,7 @@ def load_metrics(metrics_file):
                 continue
     return metrics
 
-def plot_all_metrics(metrics_file="logs/q_learning/circuit1_v1_metrics.json"):
+def plot_all_metrics(metrics_file="logs/q_learning/circuit2_v1_metrics.json"):
     """Plot distance progress - the main training metric."""
     metrics = load_metrics(metrics_file)
     
@@ -59,6 +59,21 @@ def plot_all_metrics(metrics_file="logs/q_learning/circuit1_v1_metrics.json"):
     ax.plot(episodes, distances, alpha=0.4, label='Raw Distance', 
             color=COLOR_RAW, linewidth=0.9)
     
+    # Find and mark new records (personal bests)
+    record_episodes = []
+    record_distances = []
+    current_record = 0
+    for ep, dist in zip(episodes, distances):
+        if dist > current_record:
+            current_record = dist
+            record_episodes.append(ep)
+            record_distances.append(dist)
+    
+    # Plot record markers
+    if record_episodes:
+        ax.scatter(record_episodes, record_distances, color='#e74c3c', s=80, 
+                  marker='*', zorder=5, label='New Records', edgecolors='#c0392b', linewidths=1.5)
+    
     # Moving average - make it stand out with darker blue
     if len(distances) >= 100:
         window = min(100, len(distances))
@@ -78,9 +93,23 @@ def plot_all_metrics(metrics_file="logs/q_learning/circuit1_v1_metrics.json"):
     ax.set_title(f'Training Progress - {total_episodes:,} Episodes', 
                 fontsize=15, fontweight='bold', pad=20, color='#2c3e50')
     
-    # Flat legend box with side shadow (like bottom legend)
+    # Add simplified stats box
+    avg_dist_100 = np.mean(distances[-100:]) if len(distances) >= 100 else np.mean(distances)
+    
+    stats_text = f'Episodes: {total_episodes:,}\n'
+    stats_text += f'Peak: {max_dist:.0f}\n'
+    stats_text += f'Avg (100): {avg_dist_100:.0f}'
+    
+    # Flat stats box (matching legend style) - bottom left
+    # Using same positioning offset as legend for symmetry
+    props = dict(boxstyle='square,pad=0.8', facecolor='white', alpha=1.0, 
+                 edgecolor='#d0d0d0', linewidth=1)
+    ax.text(0.025, 0.04, stats_text, transform=ax.transAxes, fontsize=11, 
+            va='bottom', ha='left', bbox=props, color='#2c3e50', zorder=10)
+    
+    # Flat legend box - bottom right
     ax.legend(fontsize=11, loc='lower right', framealpha=1.0, 
-             edgecolor='#d0d0d0', fancybox=False, shadow=True, 
+             edgecolor='#d0d0d0', fancybox=False, shadow=False, 
              frameon=True, borderpad=0.8)
     
     ax.grid(True, alpha=0.4, linestyle='--', linewidth=0.6, color='#95a5a6')
@@ -92,29 +121,6 @@ def plot_all_metrics(metrics_file="logs/q_learning/circuit1_v1_metrics.json"):
     
     # Make graph reach edges - remove margins
     ax.margins(x=0, y=0.02)  # No x-margin, tiny y-margin for breathing room
-    
-    # Add comprehensive stats box
-    avg_dist_100 = np.mean(distances[-100:]) if len(distances) >= 100 else np.mean(distances)
-    avg_dist_1000 = np.mean(distances[-1000:]) if len(distances) >= 1000 else np.mean(distances)
-    avg_dist_all = np.mean(distances)
-    
-    stats_text = f'STATISTICS\n'
-    stats_text += f'{"─" * 20}\n'
-    stats_text += f'Episodes: {total_episodes:,}\n'
-    stats_text += f'Peak: {max_dist:.0f}\n'
-    stats_text += f'Floor: {min_dist:.0f}\n'
-    stats_text += f'{"─" * 20}\n'
-    stats_text += f'Avg (last 100): {avg_dist_100:.0f}\n'
-    stats_text += f'Avg (last 1k): {avg_dist_1000:.0f}\n'
-    stats_text += f'Avg (overall): {avg_dist_all:.0f}'
-    
-    # Flat stats box with side shadow (matching legend style)
-    ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=10, va='top',
-            bbox=dict(boxstyle='square,pad=0.8', facecolor='white', alpha=1.0, 
-                     edgecolor='#d0d0d0', linewidth=1),
-            family='monospace', color='#2c3e50',
-            # Add shadow effect manually via matplotlib
-            zorder=10)
     
     # Make window resizable
     manager = plt.get_current_fig_manager()
@@ -199,7 +205,7 @@ def plot_single_metric(metrics_file, metric='distance'):
 
 def main():
     parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    metrics_file = os.path.join(parent_directory, "logs/q_learning/circuit1_v1_metrics.json")
+    metrics_file = os.path.join(parent_directory, "logs/q_learning/circuit2_v1_metrics.json")
     
     # Parse command line arguments
     mode = 'all'  # Default: show all metrics

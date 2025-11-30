@@ -1,6 +1,8 @@
 import os
+import sys
+import argparse
 import pygame
-from config import SESSION_CONFIG
+from config import SESSION_CONFIG, CIRCUIT_CONFIG
 from models.vehicle import Vehicle
 from models.environment import Environment
 from machine_learning.q_learning.agent import QLearningAgent
@@ -79,10 +81,43 @@ def run_episode(environment, vehicle, agent, manual_control, headless=False, fra
 
     return vehicle.score, window_closed
 
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description='Self-Driving AI Training')
+    parser.add_argument('--circuit', choices=['circuit_1', 'circuit_2'], 
+                       help='Which circuit to use')
+    parser.add_argument('--episodes', type=int, 
+                       help='Number of episodes to run')
+    parser.add_argument('--headless', action='store_true',
+                       help='Run without rendering (faster)')
+    parser.add_argument('--eval', action='store_true',
+                       help='Run in evaluation mode (no training)')
+    parser.add_argument('--manual', action='store_true',
+                       help='Enable manual control')
+    return parser.parse_args()
+
 def main():
     """
     Main function to run the simulation.
     """
+    # Parse command line arguments
+    args = parse_args()
+    
+    # Override config with CLI arguments
+    if args.circuit:
+        SESSION_CONFIG["CIRCUIT"] = args.circuit
+        # Reload window config
+        from config import get_window_config
+        globals()['WINDOW_CONFIG'] = get_window_config()
+    if args.episodes:
+        SESSION_CONFIG["NUM_EPISODES"] = args.episodes
+    if args.headless:
+        SESSION_CONFIG["HEADLESS"] = True
+    if args.eval:
+        SESSION_CONFIG["TRAINING_MODE"] = False
+    if args.manual:
+        SESSION_CONFIG["MANUAL_CONTROL"] = True
+    
     headless = SESSION_CONFIG.get("HEADLESS", False)
     frame_skip = SESSION_CONFIG.get("FRAME_SKIP", 1)
     
@@ -93,8 +128,8 @@ def main():
     
     environment = Environment(headless=headless)
     vehicle = Vehicle(environment)
-    # State: speed (1) + angle (1) + 5 sensors = 7 dimensions
-    state_size, action_size = 7, 4
+    # State: speed (1) + 5 sensors = 6 dimensions
+    state_size, action_size = 6, 4
     agent = QLearningAgent(state_size, action_size)
 
     # Load Q-table based on mode
@@ -122,7 +157,6 @@ def main():
 
     for episode in range(num_episodes):
         episode_start = time.time()
-        print(f"Starting episode {episode + 1}/{num_episodes}")
         vehicle.reset()
         score, window_closed = run_episode(
             environment, vehicle, agent, SESSION_CONFIG["MANUAL_CONTROL"],
@@ -146,12 +180,8 @@ def main():
             )
 
         episode_time = time.time() - episode_start
-        mode = "Training" if SESSION_CONFIG["TRAINING_MODE"] else "Evaluation"
-        finish_status = "✓ FINISHED" if vehicle.finished else ("✗ Crashed" if vehicle.collided else "⏱ Timeout")
-        print(f"{mode} episode {episode + 1} completed in {episode_time:.1f}s. "
-              f"Score: {score}, Status: {finish_status}, "
-              f"Exploration: {agent.get_exploration_rate():.3f}, "
-              f"Distance: {vehicle.total_distance:.1f}")
+        finish_status = "✓" if vehicle.finished else ("✗" if vehicle.collided else "⏱")
+        print(f"Ep {episode + 1}/{num_episodes}: {finish_status} {score:.0f} pts | {vehicle.total_distance:.0f}m | ε={agent.get_exploration_rate():.2f} | {episode_time:.1f}s")
 
     total_time = time.time() - start_time
     print(f"\nTotal training time: {total_time:.1f}s ({total_time/60:.1f} minutes)")

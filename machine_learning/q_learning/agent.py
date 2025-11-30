@@ -8,10 +8,17 @@ from config import QL_CONFIG
 class QLearningAgent:
     def __init__(self, state_size, action_size):
         """Initialize the Q-learning agent with state and action sizes, and load the Q-learning parameters from config."""
+        from config import SESSION_CONFIG, CIRCUIT_CONFIG
+        
         self.state_size = state_size  # The number of possible states
         self.action_size = action_size  # The number of possible actions
         self.q_table = defaultdict(self._default_q_values)  # Initialize Q-table with default values for unseen states
-        self.q_table_path = os.path.join("machine_learning", "q_learning", "q_tables", QL_CONFIG["Q_TABLE_FILENAME"])
+        
+        # Get Q-table filename from circuit config
+        circuit = SESSION_CONFIG.get("CIRCUIT", "circuit_1")
+        q_table_filename = CIRCUIT_CONFIG[circuit]["q_table"]
+        self.q_table_path = os.path.join("machine_learning", "q_learning", "q_tables", q_table_filename)
+        
         self.learning_rate = QL_CONFIG["LEARNING_RATE"]  # Alpha
         self.discount_factor = QL_CONFIG["DISCOUNT_FACTOR"]  # Gamma
         self.exploration_rate = QL_CONFIG["EXPLORATION_RATE"]  # Epsilon
@@ -66,6 +73,11 @@ class QLearningAgent:
                     self.q_table = loaded_table
                 return True
         except FileNotFoundError:
+            return False
+        except (EOFError, pickle.UnpicklingError):
+            # File exists but is corrupted or empty - delete it and start fresh
+            print(f"Warning: Corrupted Q-table file detected. Deleting and starting fresh.")
+            os.remove(self.q_table_path)
             return False
 
     def save_q_table(self):

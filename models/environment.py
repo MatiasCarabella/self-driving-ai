@@ -44,7 +44,9 @@ class Environment:
 
         # Get the absolute path of the directory where the .py file is running
         parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        circuit_image_path = os.path.join(parent_directory, "assets/images/circuit_1.png")  # Using easier circuit
+        from config import SESSION_CONFIG
+        circuit_name = SESSION_CONFIG.get("CIRCUIT", "circuit_1")
+        circuit_image_path = os.path.join(parent_directory, f"assets/images/{circuit_name}.png")
 
         # Load the circuit image from the relative path
         self.CIRCUIT_IMAGE = pygame.image.load(circuit_image_path).convert()
@@ -57,14 +59,16 @@ class Environment:
             r, g, b = color[:3]
             return r > 200 and g > 200 and b < 50
         
+        from config import SESSION_CONFIG, CIRCUIT_CONFIG
+        circuit_name = SESSION_CONFIG.get("CIRCUIT", "circuit_1")
+        
         for y in range(self.CIRCUIT_IMAGE.get_height()):
             for x in range(self.CIRCUIT_IMAGE.get_width()):
                 pixel_color = self.CIRCUIT_IMAGE.get_at((x, y))
                 if is_yellow(pixel_color):
-                    # For circuit_1, hardcode to point right (0 degrees)
-                    # In the future, this could detect road direction automatically
-                    angle = 0
-                    print(f"Start position found at ({x}, {y}) with angle {angle}° (pointing right)")
+                    # Get starting angle from circuit config
+                    angle = CIRCUIT_CONFIG[circuit_name]["start_angle"]
+                    print(f"Start position found at ({x}, {y}) with angle {angle}° for {circuit_name}")
                     return x, y, angle
         
         print("ERROR: No yellow start pixel found!")
