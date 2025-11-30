@@ -72,14 +72,15 @@ class Sensor:
         Draw the sensor line and the detected obstacle (if any) on the window.
         :param window: The PyGame window to draw on
         """
-        # Draw the sensor line from the vehicle to the sensor's endpoint
-        pygame.draw.line(window, COLOR_CONFIG["GREEN"], (self.vehicle.x, self.vehicle.y), (self.end_x, self.end_y), 2)
-        
-        # If an obstacle was detected, draw a circle at the obstacle's location
-        if self.distance != 0:
-            obstacle_x = int(self.vehicle.x + abs(self.distance) * math.cos(math.radians(self.vehicle.angle + self.angle_offset)))
-            obstacle_y = int(self.vehicle.y - abs(self.distance) * math.sin(math.radians(self.vehicle.angle + self.angle_offset)))
+        if window is not None:
+            # Draw the sensor line from the vehicle to the sensor's endpoint
+            pygame.draw.line(window, COLOR_CONFIG["GREEN"], (self.vehicle.x, self.vehicle.y), (self.end_x, self.end_y), 2)
             
-            # Draw the obstacle in blue if on-road, red if off-road
-            color = COLOR_CONFIG["BLUE"] if self.is_on_road else COLOR_CONFIG["RED"]
-            pygame.draw.circle(window, color, (obstacle_x, obstacle_y), 5)
+            # If an obstacle was detected, draw a circle at the obstacle's location
+            if self.distance != 0:
+                obstacle_x = int(self.vehicle.x + abs(self.distance) * math.cos(math.radians(self.vehicle.angle + self.angle_offset)))
+                obstacle_y = int(self.vehicle.y - abs(self.distance) * math.sin(math.radians(self.vehicle.angle + self.angle_offset)))
+                
+                # Draw the obstacle in blue if on-road, red if off-road
+                color = COLOR_CONFIG["BLUE"] if self.is_on_road else COLOR_CONFIG["RED"]
+                pygame.draw.circle(window, color, (obstacle_x, obstacle_y), 5)

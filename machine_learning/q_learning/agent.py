@@ -1,13 +1,9 @@
-import sys
 import os
 import pickle
 import numpy as np
 import random
 from collections import defaultdict
 from config import QL_CONFIG
-
-# Add the grandparent directory to the path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class QLearningAgent:
     def __init__(self, state_size, action_size):
@@ -62,12 +58,21 @@ class QLearningAgent:
         """Load the Q-table from a file. Returns True if successful, False if the file does not exist."""
         try:
             with open(self.q_table_path, "rb") as f:
-                self.q_table = pickle.load(f)
+                loaded_table = pickle.load(f)
+                # Convert to defaultdict if it's a regular dict
+                if isinstance(loaded_table, dict):
+                    self.q_table = defaultdict(self._default_q_values, loaded_table)
+                else:
+                    self.q_table = loaded_table
                 return True
         except FileNotFoundError:
             return False
 
     def save_q_table(self):
-        """Guarda la Q-table en un archivo."""
+        """Save the Q-table to a file."""
         with open(self.q_table_path, "wb") as f:
             pickle.dump(self.q_table, f)
+    
+    def get_exploration_rate(self):
+        """Get the current exploration rate."""
+        return self.exploration_rate

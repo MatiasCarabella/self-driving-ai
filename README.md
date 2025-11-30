@@ -26,9 +26,9 @@ This project is a 2D self-driving car simulation developed in Python using Pygam
 ## Setup Instructions
 
 ### Prerequisites
-To run this project, you'll need Python 3.x along with the Pygame and numpy libraries. You can install the required libraries using pip:
+To run this project, you'll need Python 3.x along with the required libraries. You can install them using pip:
 ```bash
-pip install pygame numpy
+pip install -r requirements.txt
 ```
 ### Installation
 
@@ -40,13 +40,35 @@ cd self-driving-ai
 
 ## Usage
 
-1. Run the simulation:
+### Standard Training (with visualization)
 ```bash
 python main.py
 ```
 
-2. Let the AI agent learn through Q-learning  
-   <sup>Or control the vehicle yourself by setting `MANUAL_CONTROL = True` in the config.py file</sup>
+### Fast Training (headless mode - 5-10x faster)
+```bash
+python train_fast.py
+```
+Runs without rendering for much faster training. Perfect for overnight training sessions.
+
+### Watch Trained Agent (Evaluation Mode)
+```bash
+python watch_agent.py
+```
+Watch your trained agent perform without any learning or logging. The agent uses its learned knowledge deterministically.
+
+### Manual Control
+Set `MANUAL_CONTROL = True` in config.py to drive the car yourself with arrow keys.
+
+## Improving Agent Performance
+
+If your agent gets stuck (e.g., only turns right, can't handle sharp corners):
+
+```bash
+python retrain_exploration.py
+```
+
+This boosts exploration to help the agent discover new strategies. See `TRAINING_TIPS.md` for detailed strategies on improving learning.
 
 ## Project Structure
 ```
@@ -73,10 +95,7 @@ self-driving-ai/
 │   ├── sensor.py
 │   └── vehicle.py
 ├── visualization/
-│   ├── q_learning/
-│   │   └── plot_exploration_rate_decay.py
-│   ├── grapher.py
-│   └── plot_progress.py
+│   └── plot_training.py
 ├── .gitignore
 ├── config.py
 ├── LICENSE
@@ -93,7 +112,9 @@ SESSION_CONFIG = {
     "TRAINING_MODE": True,    # Toggle between training and evaluation modes
     "NUM_EPISODES": 50,       # Number of episodes to run
     "EPISODE_DURATION": 20,   # Duration of each episode in seconds
-    "MANUAL_CONTROL": False   # Enable manual control with arrow keys
+    "MANUAL_CONTROL": False,  # Enable manual control with arrow keys
+    "HEADLESS": False,        # Run without rendering (5-10x faster)
+    "FRAME_SKIP": 1           # Render every Nth frame (higher = faster)
 }
 ```
 
@@ -116,17 +137,73 @@ SESSION_CONFIG = {
 - Window and display settings
 
 ## Log Files
-The training results are logged within the `logs` folder in a file named `v1.txt`, which records the episode number and the final score. This log can be used for performance analysis and progress visualization.
+The training results are logged within the `logs` folder:
+- `v2.txt`: Records the final score for each episode
+- `v2_metrics.json`: Detailed metrics including score, exploration rate, collision status, and distance traveled
+
+These logs can be used for performance analysis and progress visualization.
 
 ## Visualizing Progress
-To visualize the agent's progress, use the `visualization/plot_progress.py` script:
+Visualize your agent's training progress:
+
 ```bash
-python3 visualization/plot_progress.py
+python visualization/plot_training.py
 ```
-This will generate a graph of scores across episodes, highlighting the 100-episode moving average to illustrate the agent's improvement over time.
+
+Shows distance traveled over episodes - the primary metric for learning progress. The visualization:
+- Displays raw distance data with moving average
+- Shows max distance achieved
+- Includes comprehensive statistics (last 100, last 1000, overall averages)
+- Automatically merges multiple training sessions into a continuous timeline
+
+For detailed single-metric views:
+```bash
+python visualization/plot_training.py distance  # Same as default
+python visualization/plot_training.py score     # Score-focused view
+```
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f8bc373f-3271-44d0-b3a3-5409cae49b68" />
 </p>
+
+## Training Speed Optimization
+
+### Performance Comparison (100 episodes)
+| Mode | Time | Speedup |
+|------|------|---------|
+| Standard (with rendering) | ~35 minutes | 1x |
+| Headless mode | ~4-6 minutes | 5-10x |
+| Frame skip (skip=3) | ~12 minutes | 3x |
+
+### Recommendations
+- **Development/Testing**: Use standard mode to see what's happening
+- **Large-Scale Training**: Use headless mode (`train_fast.py`)
+- **Debugging**: Use frame skip to balance speed and visibility
+
+## Recent Improvements (v2)
+
+### Enhanced State Representation
+- Added vehicle angle to state space for better directional awareness
+- Improved state discretization for more effective learning
+
+### Improved Reward System
+- Configurable reward parameters in `config.py`
+- Reduced collision penalty for better early-stage learning
+- Added forward progress rewards
+- Integrated checkpoint system into reward calculation
+- Normalized rewards for consistent learning
+
+### Better Metrics & Logging
+- Comprehensive metrics tracking (exploration rate, collision rate, distance)
+- JSON-based detailed logging for analysis
+- New visualization script for multi-metric analysis
+- Real-time exploration rate display during training
+
+### Code Quality
+- Removed unnecessary imports and path manipulations
+- Fixed internationalization issues (Spanish comments)
+- Added `requirements.txt` for easier setup
+- Configurable reward parameters for experimentation
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
